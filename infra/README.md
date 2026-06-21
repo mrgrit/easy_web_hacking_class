@@ -41,10 +41,12 @@ cd infra
 
 | 사이트 | 주소 | 쓰는 주차 | 로그인 |
 |--------|------|-----------|--------|
+| **강좌 사이트** | `http://<victim-ip>:8090` | 전 주차 | 없음 (커리큘럼·교과서·실습·다운로드 포털) |
 | **DVWA** | `http://<victim-ip>:8080` | Week 03 | `admin` / `password` (첫 접속 시 *Create / Reset Database*) |
 | **NeoBank** | `http://<victim-ip>:3001` | Week 04 | 데모계정 `alice@example.com` / `alice123` (그 외 bob/carol/teller1, admin) |
 | **MediForum** | `http://<victim-ip>:3003` | Week 05 (CTF 표적) | 사이트 내 **회원가입** 후 로그인 |
 | **CTFd** | `http://<victim-ip>:8000` | Week 05 (CTF 플랫폼) | 최초 1회 관리자 셋업 |
+| **AI 도우미** | `http://<victim-ip>:8001` | Week 05 (힌트 챗봇) | 없음 (flag 미노출) |
 | *govportal* | `:3002` | (보너스) | extras |
 | *aicompanion* | `:3005` | (보너스) | extras |
 | *adminconsole* | `:3004` | (보너스) | extras |
@@ -61,8 +63,12 @@ cd infra
 
 `ctf/README.md` 참고. 요약:
 1. `http://<victim-ip>:8000` 접속 → 최초 관리자 계정 생성
-2. **Admin → Config → Backup → Import** 로 `ctf/ctfd-export.zip` 불러오기 (문제·flag 일괄 등록)
-3. 학생은 회원가입 후 문제 풀이, **Scoreboard** 에서 실시간 순위 확인
+2. 문제·flag·힌트 일괄 등록 — CTFd → Settings → Access Tokens 발급 후:
+   ```bash
+   cd ../ctf && pip install requests pyyaml
+   python3 import_challenges.py --ctfd http://<victim-ip>:8000 --token <TOKEN> --victim <victim-ip>
+   ```
+3. 학생은 회원가입 후 문제 풀이, **Scoreboard** 에서 실시간 순위 확인. 힌트는 AI 도우미(`:8001`).
 
 ## 4. 내리기
 

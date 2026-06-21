@@ -1,0 +1,58 @@
+:root{
+  --bg:#0d1117; --card:#161b22; --line:#30363d; --fg:#e6edf3; --muted:#8b949e;
+  --blue:#1f6feb; --red:#f85149; --green:#3fb950; --orange:#d29922; --purple:#bc8cff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI","Apple SD Gothic Neo",sans-serif;
+  background:var(--bg);color:var(--fg);line-height:1.65}
+a{color:#58a6ff;text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:960px;margin:0 auto;padding:24px 18px}
+.topbar{position:sticky;top:0;background:rgba(13,17,23,.92);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line);z-index:10}
+.topbar .wrap{display:flex;align-items:center;gap:14px;padding:12px 18px}
+.topbar .brand{font-weight:800;font-size:17px}
+.topbar nav a{color:var(--muted);margin-left:14px;font-size:14px}
+
+.hero{background:linear-gradient(135deg,#11203f,#1b1330);border:1px solid var(--line);
+  border-radius:16px;padding:34px 28px;margin-bottom:26px}
+.hero h1{margin:.1em 0;font-size:30px;line-height:1.25}
+.hero p{color:#c9d1d9;font-size:16px;margin:.4em 0 0}
+.badges{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+.badge{background:#21262d;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:#c9d1d9}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column}
+.card .wk{color:var(--muted);font-size:13px;font-weight:700;letter-spacing:.04em}
+.card h3{margin:.3em 0;font-size:18px}
+.card .hook{color:#c9d1d9;font-size:14px;flex:1}
+.card .meta{color:var(--muted);font-size:13px;margin:10px 0 12px}
+.card .links{display:flex;gap:8px}
+.btn{display:inline-block;background:var(--blue);color:#fff;border:none;border-radius:8px;
+  padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.btn:hover{background:#388bfd;text-decoration:none}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:#c9d1d9}
+
+.section{margin:34px 0}
+.section h2{font-size:22px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.dl{display:flex;flex-wrap:wrap;gap:10px}
+.dl a{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;color:#c9d1d9}
+.info{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.info code{background:#0d1117;border:1px solid var(--line);border-radius:6px;padding:2px 6px}
+.warn{border-left:4px solid var(--orange)}
+
+/* 문서 뷰어 */
+.doc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px}
+.doc h1{font-size:26px;margin-top:.2em}
+.doc h2{font-size:21px;border-bottom:1px solid var(--line);padding-bottom:6px;margin-top:1.6em}
+.doc h3{font-size:17px;margin-top:1.3em}
+.doc table{border-collapse:collapse;width:100%;margin:1em 0;font-size:14px;display:block;overflow-x:auto}
+.doc th,.doc td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+.doc th{background:#21262d}
+.doc pre{background:#0d1117;border:1px solid var(--line);border-radius:8px;padding:14px;overflow-x:auto}
+.doc code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px}
+.doc :not(pre)>code{background:#0d1117;border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.doc blockquote{border-left:4px solid var(--blue);margin:1em 0;padding:.4em 1em;background:#0d1117;color:#c9d1d9}
+.doc .mermaid{background:#fff;border-radius:10px;padding:14px;margin:1em 0;text-align:center}
+.docnav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.footer{color:var(--muted);font-size:13px;text-align:center;padding:30px 0}

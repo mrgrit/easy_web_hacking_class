@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧪 AI 웹 해킹 특강 — 실습 워크북</title>
+<style>
+  :root{
+    --ink:#1f2937; --soft:#5b6471; --line:#cbd5e1; --line2:#e2e8f0;
+    --accent:#1f6feb; --accent-soft:#eaf1fe; --good:#15803d; --warn:#b45309; --warn-bg:#fff7ed;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo",
+                 "Noto Sans KR", "Malgun Gothic", sans-serif;
+    color:var(--ink); line-height:1.6; background:#f1f5f9; font-size:14px;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  .page{max-width:860px; margin:24px auto; background:#fff; padding:40px 48px;
+        box-shadow:0 4px 24px rgba(0,0,0,.08); border-radius:10px;}
+  h1{font-size:28px; margin:0 0 2px; letter-spacing:-.5px;}
+  .lead{color:var(--soft); margin:0 0 24px;}
+  h2.week{font-size:21px; margin:34px 0 14px; padding:8px 14px; color:#fff;
+          background:var(--accent); border-radius:8px;}
+  h2.cover{font-size:19px; margin:8px 0 12px; border-bottom:2px solid var(--accent); padding-bottom:6px;}
+  .note{font-size:13px; color:var(--soft); margin:6px 0 12px;}
+  table{width:100%; border-collapse:collapse; margin:10px 0 6px;}
+  th,td{border:1px solid var(--line); padding:7px 9px; vertical-align:top; text-align:left;}
+  th{background:var(--accent-soft); font-weight:700; font-size:13px;}
+  td.c{text-align:center; white-space:nowrap;}
+  .num{width:34px; text-align:center; font-weight:700; color:var(--accent);}
+  /* fill-in lines and blank cells */
+  .fill{display:block; border-bottom:1.4px solid var(--ink); min-height:22px; margin:4px 0;}
+  .blank{height:30px;}
+  .label{font-weight:700; margin:14px 0 2px;}
+  .chk{font-size:15px;}
+  /* info / usage box */
+  .usage{background:var(--warn-bg); border:1px solid #fdba74; border-radius:8px; padding:12px 18px; color:#7c2d12;}
+  .usage ul{margin:6px 0 0; padding-left:20px;}
+  .usage li{margin:3px 0;}
+  .quote{border-left:4px solid var(--line); padding:4px 0 4px 0; margin:4px 0 14px;}
+  .ethic{font-weight:700; color:var(--good); margin:6px 0 0;}
+  .cover-box{border:2px solid var(--ink); border-radius:10px; padding:6px 22px 14px; margin-bottom:10px;}
+  hr{border:none; border-top:1px dashed var(--line); margin:26px 0;}
+  .grad h2.week{background:#b45309;}
+  @media print{
+    body{background:#fff; font-size:12px;}
+    .page{margin:0; box-shadow:none; border-radius:0; max-width:none; padding:0;}
+    @page{size:A4; margin:14mm;}
+    h2.week{break-after:avoid;}
+    table, .usage, .cover-box{break-inside:avoid;}
+    .weeksec{break-before:page;}
+    .weeksec:first-of-type{break-before:auto;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>🧪 AI 웹 해킹 특강 — 실습 워크북</h1>
+  <p class="lead">내가 직접 채우는 5주간의 해킹 일지</p>
+
+  <!-- COVER -->
+  <h2 class="cover">표지 — 내 정보</h2>
+  <div class="cover-box">
+    <table>
+      <tr><th style="width:120px;">이름</th><td><span class="fill"></span></td></tr>
+      <tr><th>학교 · 반</th><td><span class="fill"></span></td></tr>
+      <tr><th>특강 기간</th><td>20___ . ___ . ___ &nbsp; ~ &nbsp; 20___ . ___ . ___</td></tr>
+    </table>
+    <p class="chk" style="margin:12px 0 0;">☐ 나는 해킹 서약서에 서명했다.</p>
+  </div>
+
+  <h2 class="cover">📌 사용법 (꼭 읽기)</h2>
+  <div class="usage">
+    <ul>
+      <li><b>매 실습마다</b> 직접 손으로 기록한다. 화면을 캡처해 붙이거나 그림으로 그려도 좋다.</li>
+      <li>"결과"는 ☐ 칸에 체크(✓)한다. 성공이든 실패든 <b>솔직하게</b> 적는 게 제일 중요하다.</li>
+      <li>⚠️ <b>정확한 공격 글자(페이로드)·정답·flag 값은 적지 않는다.</b> "무엇을 했고 무엇을 봤는지"만 내 말로.</li>
+      <li>막힌 점은 부끄러운 게 아니라 <b>다음에 배울 거리</b>다. 꼭 적어 두자.</li>
+      <li>모든 실습은 <b>허락된 표적에서만</b> 한다. 이게 우리의 약속이다.</li>
+    </ul>
+  </div>
+
+  <!-- ===== WEEK 01 ===== -->
+  <section class="weeksec">
+  <h2 class="week">Week 01 — AI와 AI 에이전트, 그리고 윤리</h2>
+  <p class="label">오늘의 한 줄 목표 <span class="note">(칠판·교재에서 읽고 옮겨 적기)</span></p>
+  <div class="quote"><span class="fill"></span></div>
+
+  <p class="label">새로 배운 용어 3개</p>
+  <table>
+    <tr><th style="width:200px;">용어</th><th>내가 이해한 뜻 (한 줄)</th></tr>
+    <tr><td class="blank"></td><td></td></tr>
+    <tr><td class="blank"></td><td></td></tr>
+    <tr><td class="blank"></td><td></td></tr>
+  </table>
+
+  <p class="label">실습 기록표</p>
+  <table>
+    <tr><th class="num">#</th><th>무엇을 했나</th><th style="width:120px;">결과</th><th>화면에서 본 것 / 캡처</th><th>막힌 점</th></tr>
+    <tr><td class="num">1</td><td>AI 챗봇에 동화 써달라고 2번 보내기</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+    <tr><td class="num">2</td><td>AI의 환각(지어낸 거짓말) 1건 잡기</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+    <tr><td class="num">3</td><td>(강사 시연) 에이전트가 파일 만드는 것 보기</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+    <tr><td class="num">4</td><td>윤리 OX 퀴즈 5문제 풀기</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+    <tr><td class="num">5</td><td>해킹 서약서에 서명하기</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+  </table>
+
+  <p class="label">오늘의 우와! 포인트</p>
+  <div class="quote"><span class="fill"></span></div>
+  <p class="label">한 줄 회고</p><span class="fill"></span>
+  <p class="ethic chk">☐ 나는 허락된 표적에서만 실습했다.</p>
+  </section>
+
+  <!-- ===== WEEK 02 ===== -->
+  <section class="weeksec">
+  <h2 class="week">Week 02 — 리눅스·Claude Code + 내 첫 웹사이트 + GitHub</h2>
+  <p class="label">오늘의 한 줄 목표</p>
+  <div class="quote"><span class="fill"></span></div>
+
+  <p class="label">새로 배운 용어 3개</p>
+  <table>
+    <tr><th style="width:200px;">용어</th><th>내가 이해한 뜻 (한 줄)</th></tr>
+    <tr><td class="blank"></td><td></td></tr>
+    <tr><td class="blank"></td><td></td></tr>
+    <tr><td class="blank"></td><td></td></tr>
+  </table>
+
+  <p class="label">실습 기록표</p>
+  <table>
+    <tr><th class="num">#</th><th>무엇을 했나</th><th style="width:120px;">결과</th><th>화면에서 본 것 / 캡처</th><th>막힌 점</th></tr>
+    <tr><td class="num">1</td><td>터미널 명령어로 작업 폴더 만들기</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+    <tr><td class="num">2</td><td>Claude Code 설치 (버전 확인)</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+    <tr><td class="num">3</td><td>AI 비서와 첫 대화 → 파일 만들기</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+    <tr><td class="num">4</td><td>Claude Code로 심리테스트 사이트 만들기</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+    <tr><td class="num">5</td><td>브라우저로 내 사이트 띄워 테스트하기</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+    <tr><td class="num">6</td><td>내 사이트를 GitHub에 올리기(push)</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+    <tr><td class="num">7</td><td>올린 작품 다시 받기(clone)</td><td class="c">성공 ☐<br>실패 ☐</td><td></td><td></td></tr>
+  </table>
+
+  <p class="label">오늘의 우와! 포인트</p>
+  <div class="quote"><span class="fill"></span></div>
+  <p class="label">한 줄 회고</p><span class="fill"></span>
+  <p class="ethic chk">☐ 나는 허락된 표적에서만 실습했다.</p>
+  </section>
+
+  <!-- ===== WEEK 03 ===== -->
+  <section class="weeksec">
+  <h2 class="week">Week 03 — 웹의 작동 원리 + 직접 해보는 웹 해킹 (DVWA)</h2>
+  <p class="note">이번 주부터는 <b>원리(왜 뚫리나)</b>와 <b>결과(무엇을 봤나)</b>를 나눠 적자. 정확한 공격 글자는 적지 않는다.</p>
+  <p class="label">오늘의 한 줄 목표</p>
+  <div class="quote"><span class="fill"></span></div>
+
+  <p class="label">새로 배운 용어 3개</p>
+  <table>
+    <tr><th style="width:200px;">용어</th><th>내가 이해한 뜻 (한 줄)</th></tr>
+    <tr><td class="blank"></td><td></td></tr>
+    <tr><td class="blank"></td><td></td></tr>
+    <tr><td class="blank"></td><td></td></tr>
+  </table>
+
+  <p class="label">실습 기록표 <span class="note">(표적: DVWA, Security = Low)</span></p>
+  <table>
+    <tr><th class="num">#</th><th>공격 / 문제</th><th>이해한 것 (원리, 내 말로)</th><th style="width:110px;">결과</th><th>화면에서 본 것 / 막힌 점</th></tr>
+    <tr><td class="num">1</td><td>개발자도구로 쿠키·요청 관찰</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">2</td><td>SQL 인젝션 (비밀번호 목록 추출)</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">3</td><td>XSS (경고창 / 쿠키 출력)</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">4</td><td>인증우회 / Brute Force</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">5</td><td>CSRF (비밀번호 무단 변경)</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">6</td><td>파일 업로드 (웹셸로 명령 실행)</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+  </table>
+
+  <p class="label">오늘의 우와! 포인트</p>
+  <div class="quote"><span class="fill"></span></div>
+  <p class="label">한 줄 회고</p><span class="fill"></span>
+  <p class="ethic chk">☐ 나는 허락된 표적에서만 실습했다.</p>
+  </section>
+
+  <!-- ===== WEEK 04 ===== -->
+  <section class="weeksec">
+  <h2 class="week">Week 04 — AI 에이전트와 함께하는 모의해킹 (NeoBank)</h2>
+  <p class="note">AI 에이전트(Claude Code)가 점검하고, 나는 결과를 읽고 이해한다. <b>원리</b>와 <b>결과</b>를 적자.</p>
+  <p class="label">오늘의 한 줄 목표</p>
+  <div class="quote"><span class="fill"></span></div>
+
+  <p class="label">새로 배운 용어 3개</p>
+  <table>
+    <tr><th style="width:200px;">용어</th><th>내가 이해한 뜻 (한 줄)</th></tr>
+    <tr><td class="blank"></td><td></td></tr>
+    <tr><td class="blank"></td><td></td></tr>
+    <tr><td class="blank"></td><td></td></tr>
+  </table>
+
+  <p class="label">실습 기록표 <span class="note">(표적: NeoBank — 가상 은행)</span></p>
+  <table>
+    <tr><th class="num">#</th><th>점검 항목 (프롬프트)</th><th>이해한 것 (원리, 내 말로)</th><th style="width:110px;">결과</th><th>AI가 찾은 것 / 막힌 점</th></tr>
+    <tr><td class="num">1</td><td>범위 설정 + 정찰(버전 확인)</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">2</td><td>일반 고객 로그인 + 기능 지도</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">3</td><td>기본 관리자 계정 점검</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">4</td><td>IDOR — 남의 비밀 계좌 열람</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">5</td><td>SQLi 로그인 우회</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">6</td><td>SQLi 데이터 추출(회원정보)</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">7</td><td>인증우회 헤더 + 개인정보(PII) 노출</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">8</td><td>저장형 XSS (송금 메모)</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">9</td><td>권한상승 (role 바꾸기)</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+    <tr><td class="num">10</td><td>AI가 취약점 보고서 자동 작성</td><td></td><td class="c">성공 ☐<br>실패 ☐</td><td></td></tr>
+  </table>
+
+  <p class="label">가장 위험하다고 생각한 취약점 1개와 그 이유</p>
+  <div class="quote"><span class="fill"></span></div>
+  <p class="label">오늘의 우와! 포인트</p>
+  <div class="quote"><span class="fill"></span></div>
+  <p class="label">한 줄 회고</p><span class="fill"></span>
+  <p class="ethic chk">☐ 나는 허락된 표적에서만 실습했다.</p>
+  </section>
+
+  <!-- ===== WEEK 05 ===== -->
+  <section class="weeksec grad">
+  <h2 class="week">Week 05 — 🏁 mini-CTF (MediForum + CTFd)</h2>
+  <p class="note">깃발(flag) 사냥! <b>방법의 방향</b>과 <b>결과</b>만 적자. <b>flag 값·정확한 풀이는 적지 않는다</b>(그게 CTF다).</p>
+  <p class="label">오늘의 한 줄 목표</p>
+  <div class="quote"><span class="fill"></span></div>
+
+  <p class="label">새로 배운 용어 3개</p>
+  <table>
+    <tr><th style="width:200px;">용어</th><th>내가 이해한 뜻 (한 줄)</th></tr>
+    <tr><td class="blank"></td><td></td></tr>
+    <tr><td class="blank"></td><td></td></tr>
+    <tr><td class="blank"></td><td></td></tr>
+  </table>
+
+  <p class="label">실습 기록표 <span class="note">(표적: MediForum / 제출: CTFd) — flag 값은 적지 말 것!</span></p>
+  <table>
+    <tr><th class="num">#</th><th>문제 (기법)</th><th>어떻게 접근했나 (방향, 내 말로)</th><th style="width:120px;">결과</th><th>막힌 점 / AI에게 한 질문</th></tr>
+    <tr><td class="num">1</td><td>정찰 — 소스에 숨은 깃발</td><td></td><td class="c">제출✓ ☐<br>미해결 ☐</td><td></td></tr>
+    <tr><td class="num">2</td><td>인증 없는 회원 API (PII)</td><td></td><td class="c">제출✓ ☐<br>미해결 ☐</td><td></td></tr>
+    <tr><td class="num">3</td><td>남의 진료기록 (IDOR)</td><td></td><td class="c">제출✓ ☐<br>미해결 ☐</td><td></td></tr>
+    <tr><td class="num">4</td><td>관리자 쪽지 도청 (인증결함)</td><td></td><td class="c">제출✓ ☐<br>미해결 ☐</td><td></td></tr>
+    <tr><td class="num">5</td><td>(응용) 예측 가능한 세션</td><td></td><td class="c">제출✓ ☐<br>미해결 ☐</td><td></td></tr>
+    <tr><td class="num">6</td><td>(보스) 저장형 XSS — 관리자 봇</td><td></td><td class="c">제출✓ ☐<br>미해결 ☐</td><td></td></tr>
+  </table>
+
+  <p class="label">내 점수 / 리더보드 순위</p><span class="fill"></span>
+  <p class="label">오늘의 우와! 포인트</p>
+  <div class="quote"><span class="fill"></span></div>
+  <p class="label">한 줄 회고</p><span class="fill"></span>
+  <p class="ethic chk">☐ 나는 허락된 표적에서만 실습했다.</p>
+  </section>
+
+  <hr>
+
+  <!-- ===== 수료 ===== -->
+  <section class="weeksec">
+  <h2 class="cover">🎓 수료 — 마무리</h2>
+
+  <p class="label">5주간의 수료 소감 <span class="note">(자유롭게)</span></p>
+  <span class="fill"></span><span class="fill"></span><span class="fill"></span>
+
+  <p class="label">다음에 더 배우고 싶은 것 <span class="note">(하나 선택)</span></p>
+  <p class="chk">☐ picoCTF — 더 많은 해킹 문제 풀기</p>
+  <p class="chk">☐ 버그 바운티 — 실제 약점 찾아 신고하고 포상받기</p>
+  <p class="chk">☐ 블루팀 — 공격을 막는 수비수(방어) 되기</p>
+
+  <p class="label">강사 확인란</p>
+  <table>
+    <tr><th style="width:120px;">강사 의견</th><td class="blank"></td></tr>
+    <tr><th>강사 확인</th><td>이름 <span style="display:inline-block;border-bottom:1.3px solid var(--ink);min-width:120px;"></span>
+        &nbsp; 서명 <span style="display:inline-block;border-bottom:1.3px solid var(--ink);min-width:120px;"></span></td></tr>
+  </table>
+  </section>
+
+</div>
+</body>
+</html>

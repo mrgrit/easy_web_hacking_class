@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="hero">
+  <h1>🕵️ AI로 배우는 웹 해킹 특강</h1>
+  <p>코드 한 줄 몰라도, AI 에이전트와 함께라면 진짜 해커가 하는 일을 직접 해볼 수 있다.</p>
+  <div class="badges">
+    <span class="badge">🎯 비전공 고등학생 대상</span>
+    <span class="badge">🤖 Claude Code와 함께</span>
+    <span class="badge">🧪 5섹터 · 직접 체험</span>
+    <span class="badge">🏁 mini-CTF 대결</span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>📚 커리큘럼 (5개 섹터)</h2>
+  <div class="grid">
+    {% for wk, info in weeks.items() %}
+    <div class="card">
+      <span class="wk">WEEK {{ wk }} · {{ info.hours }}</span>
+      <h3>{{ info.emoji }} {{ info.title }}</h3>
+      <p class="hook">{{ info.hook }}</p>
+      <div class="links">
+        <a class="btn" href="/lecture/{{ wk }}">교과서 열기</a>
+        <a class="btn ghost" href="/lab/{{ wk }}">실습 보기</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="section" id="downloads">
+  <h2>⬇️ 실습 자료 다운로드</h2>
+  <p style="color:#8b949e">아래 자료를 받아 인쇄하거나 채워가며 사용하세요.</p>
+  <div class="dl">
+    {% for f in downloads %}
+    <a href="/download/{{ f }}">📄 {{ f }}</a>
+    {% else %}
+    <span style="color:#8b949e">준비된 다운로드가 없습니다.</span>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="section">
+  <h2>🖥️ 실습 환경 빠른 시작</h2>
+  <div class="info">
+    <p>희생자 사이트(표적)를 한 번에 띄웁니다. (희생자 VM에서)</p>
+    <pre><code>cd infra
+./start.sh        # DVWA · NeoBank · MediForum · CTFd · AI도우미 기동</code></pre>
+    <table>
+      <tr><th>사이트</th><th>주소</th><th>쓰는 곳</th></tr>
+      <tr><td>DVWA</td><td><code>:8080</code></td><td>Week 03 웹 해킹</td></tr>
+      <tr><td>NeoBank</td><td><code>:3001</code></td><td>Week 04 AI 모의해킹</td></tr>
+      <tr><td>MediForum</td><td><code>:3003</code></td><td>Week 05 CTF 표적</td></tr>
+      <tr><td>CTFd</td><td><code>:8000</code></td><td>Week 05 CTF 플랫폼</td></tr>
+      <tr><td>AI 도우미</td><td><code>:8001</code></td><td>Week 05 힌트 챗봇</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h2>⚠️ 안전·윤리</h2>
+  <div class="info warn">
+    이 특강의 모든 표적은 <b>교육용으로 일부러 취약하게</b> 만든 것입니다. 반드시 본인 소유 또는
+    허락된 폐쇄망 실습 환경에서만 사용하세요. 실제 타인의 웹사이트를 허락 없이 공격하는 것은
+    <b>범죄</b>입니다(정보통신망법). 자세한 내용은 Week 01 교과서와 해킹 서약서를 참고하세요.
+  </div>
+</div>
+
+{% endblock %}

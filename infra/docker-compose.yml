@@ -67,6 +67,18 @@ services:
     restart: unless-stopped
     networks: [ezweb]
 
+  # ---- 강좌 포털 웹사이트 (커리큘럼·교과서·실습·다운로드) --------------------
+  course-site:
+    build:
+      context: ..
+      dockerfile: site/Dockerfile
+    image: ezweb-course-site:latest
+    container_name: ezweb-course-site
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+    networks: [ezweb]
+
   # ---- Week 05: mini-CTF AI 도우미 (힌트 챗봇, flag 미노출) ------------------
   ai-helper:
     build: ../ctf/ai-helper

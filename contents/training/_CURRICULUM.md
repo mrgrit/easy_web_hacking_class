@@ -77,8 +77,14 @@
 
 ---
 
+## 배부 자료 (학생 다운로드)
+- 🔐 **해킹 서약서** (`../../downloads/해킹서약서.md` / `.html`) — Week 01 에 작성·서명. 모든 주차의 입장권.
+- 📓 **실습 워크북** (`../../downloads/실습워크북.md` / `.html`) — 매 주차 실습 결과를 직접 기록. 각 주차 lab 의 step 에 맞춰 칸이 준비됨.
+- 강좌 웹사이트(`site/`, 포트 8090)에서 교과서·실습을 읽고 위 자료를 내려받을 수 있다.
+
 ## 파일 인덱스
 - 교과서: `lecture_week01.md` … `lecture_week05.md`
 - 실습: `lab_week01.yaml` … `lab_week05.yaml`
 - 집필 기준: `_LECTURE_RUBRIC.md`
-- CTF: `../../ctf/`, 정답: `../../solutions/`
+- 강좌 웹사이트: `../../site/`  ·  배부 자료: `../../downloads/`
+- CTF: `../../ctf/`, 정답(강사용): `../../solutions/`

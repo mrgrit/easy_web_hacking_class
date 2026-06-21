@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Week {{ week }} {{ kind }} · AI 웹 해킹 특강{% endblock %}
+{% block content %}
+
+<div class="docnav">
+  <a class="btn ghost" href="/">← 홈</a>
+  <a class="btn {% if kind=='교과서' %}{% else %}ghost{% endif %}" href="/lecture/{{ week }}">교과서</a>
+  <a class="btn {% if kind=='실습' %}{% else %}ghost{% endif %}" href="/lab/{{ week }}">실습</a>
+  {% set wk_int = week|int %}
+  {% if wk_int > 1 %}<a class="btn ghost" href="/lecture/{{ '%02d'|format(wk_int-1) }}">← 이전 주차</a>{% endif %}
+  {% if wk_int < 5 %}<a class="btn ghost" href="/lecture/{{ '%02d'|format(wk_int+1) }}">다음 주차 →</a>{% endif %}
+</div>
+
+<div class="doc">
+{{ body|safe }}
+</div>
+
+<div class="docnav" style="margin-top:18px">
+  <a class="btn ghost" href="/">← 홈으로</a>
+</div>
+
+{% endblock %}
+{% block scripts %}
+{% if has_mermaid %}
+<script src="/static/vendor/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  }
+</script>
+{% endif %}
+{% endblock %}

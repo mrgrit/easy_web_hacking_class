@@ -36,21 +36,45 @@ contents/training/
 
 ---
 
+## 🌐 강좌 웹사이트 (포털)
+
+이 강좌만을 위한 **웹사이트**가 있습니다. 커리큘럼을 한눈에 보고, 교과서·실습을 브라우저에서
+바로 읽고, 워크북·서약서를 내려받습니다. [`site/`](site/)
+
+```bash
+cd infra && ./start.sh          # 강좌 사이트가 :8090 에 함께 뜸
+# 또는 도커 없이:  cd site && pip install flask markdown && ./serve.sh
+```
+접속: `http://<victim-ip>:8090` — **교과서/실습 렌더링 + 다운로드**.
+> 보안상 이 사이트는 학생용 자료(교과서·실습·배부물)만 노출하며, 정답 풀이(`solutions/`)·
+> flag 정의(`ctf/challenges.yml`)는 절대 서빙하지 않습니다.
+
+## ⬇️ 배부 자료 (다운로드)
+
+[`downloads/`](downloads/) — 강좌 사이트에서도 받을 수 있습니다.
+
+| 자료 | 파일 | 용도 |
+|------|------|------|
+| 🔐 해킹 윤리 서약서 | `해킹서약서.md` / `.html` | **Week 01** 에 작성·서명(인쇄용 HTML 포함) |
+| 📓 실습 워크북 | `실습워크북.md` / `.html` | 매 주차 실습 결과를 직접 기록(인쇄용 HTML 포함) |
+
 ## 🖥️ 실습 환경 (희생자 / 공격자)
 
 복잡한 인프라 없이 **VM 두 대**(또는 노트북 한 대)면 됩니다. 자세한 건 [`infra/README.md`](infra/README.md).
 
 ```bash
 cd infra
-./start.sh        # DVWA + NeoBank + MediForum + CTFd 한 번에 기동
+./start.sh        # 강좌사이트 + DVWA + NeoBank + MediForum + CTFd + AI도우미 한 번에 기동
 ```
 
 | 사이트 | 주소 | 쓰는 곳 |
 |--------|------|---------|
+| 강좌 사이트 | `:8090` | 전 주차 포털·교과서·다운로드 |
 | DVWA | `:8080` | Week 03 웹 해킹 |
 | NeoBank | `:3001` | Week 04 AI 모의해킹 |
 | MediForum | `:3003` | Week 05 CTF 표적 |
 | CTFd | `:8000` | Week 05 CTF 플랫폼 |
+| AI 도우미 | `:8001` | Week 05 힌트 챗봇 |
 
 ---
 

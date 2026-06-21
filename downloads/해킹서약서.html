@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔐 해킹 윤리 서약서</title>
+<style>
+  :root{
+    --ink:#1f2937; --soft:#4b5563; --line:#cbd5e1;
+    --accent:#1f6feb; --accent-soft:#e8f0fe; --warn:#b45309; --warn-bg:#fff7ed;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo",
+                 "Noto Sans KR", "Malgun Gothic", sans-serif;
+    color:var(--ink); line-height:1.7; background:#f1f5f9;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  .page{
+    max-width:760px; margin:24px auto; background:#fff; padding:48px 52px;
+    box-shadow:0 4px 24px rgba(0,0,0,.08); border-radius:10px;
+  }
+  h1{font-size:30px; margin:0 0 4px; letter-spacing:-.5px;}
+  .subtitle{color:var(--soft); font-size:14px; margin:0 0 22px;}
+  .intro{
+    background:var(--accent-soft); border-left:5px solid var(--accent);
+    padding:14px 18px; border-radius:6px; font-size:15px; margin:0 0 26px;
+  }
+  h2{font-size:20px; border-bottom:2px solid var(--line); padding-bottom:6px; margin:30px 0 16px;}
+  .pledge{margin:0 0 8px;}
+  .pledge .num{font-weight:700; color:var(--accent); font-size:16px;}
+  .pledge .desc{color:var(--soft); font-size:14px; margin:2px 0 16px 4px;}
+  .law{
+    background:var(--warn-bg); border:1px solid #fdba74; border-radius:8px;
+    padding:14px 18px; font-size:14px; margin:24px 0; color:#7c2d12;
+  }
+  .law b{color:var(--warn);}
+  .sign{
+    border:2px solid var(--ink); border-radius:10px; padding:8px 22px 18px; margin-top:10px;
+  }
+  .sign-row{display:flex; align-items:flex-end; gap:14px; padding:16px 0 4px; border-bottom:1px dashed var(--line);}
+  .sign-row:last-child{border-bottom:none;}
+  .sign-label{flex:0 0 96px; font-weight:600;}
+  .sign-blank{flex:1; border-bottom:1.5px solid var(--ink); min-height:26px;}
+  .sign-blank.small{flex:0 0 140px;}
+  .date-line{flex:1; font-size:16px; letter-spacing:1px;}
+  .date-line span{display:inline-block; border-bottom:1.5px solid var(--ink); min-width:60px;}
+  .guardian{margin-top:18px; font-size:14px; color:var(--soft);}
+  .guardian .gb{display:inline-block; border-bottom:1.3px solid var(--soft); min-width:130px; margin:0 6px;}
+  .closing{margin-top:26px; font-size:15px; font-weight:600; text-align:center;}
+  @media print{
+    body{background:#fff;}
+    .page{margin:0; box-shadow:none; border-radius:0; max-width:none; padding:0 14mm;}
+    @page{size:A4; margin:16mm;}
+    .intro,.law,.sign{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <h1>🔐 해킹 윤리 서약서</h1>
+    <p class="subtitle">AI 웹 해킹 특강</p>
+
+    <div class="intro">
+      해킹은 자물쇠를 따는 기술과 같아. 잘 쓰면 사람을 지키고, 잘못 쓰면 사람을 다치게 해.
+      그래서 우리는 도구를 배우기 <b>전에 약속부터</b> 한다. 강력한 기술일수록 약속이 먼저야.
+      아래 5가지를 읽고 동의한다면, 이름과 날짜를 적고 서명하자. 이 서약서가 다음 모든 주차의
+      <b>입장권</b>이다.
+    </div>
+
+    <h2>나의 서약</h2>
+
+    <div class="pledge"><span class="num">①</span> <b>허락된 곳에서만 한다.</b>
+      <div class="desc">나는 이 특강이 연습용으로 만든 표적(DVWA·NeoBank·MediForum·CTFd)에서만 배운 기술을 쓴다.</div></div>
+
+    <div class="pledge"><span class="num">②</span> <b>남의 시스템은 건드리지 않는다.</b>
+      <div class="desc">나는 허락받지 않은 다른 사람·학교·회사의 시스템에 절대 무단으로 접근하지 않는다.</div></div>
+
+    <div class="pledge"><span class="num">③</span> <b>알게 된 약점은 악용하지 않고 책임 있게 알린다.</b>
+      <div class="desc">나는 우연히 약점을 발견해도 그것을 나쁜 데 쓰지 않고, 고칠 수 있도록 제대로 알린다.</div></div>
+
+    <div class="pledge"><span class="num">④</span> <b>배운 기술을 좋은 방향으로 쓴다.</b>
+      <div class="desc">나는 이 기술을 누군가를 지키고 더 안전한 세상을 만드는 데 쓴다(화이트해커처럼).</div></div>
+
+    <div class="pledge"><span class="num">⑤</span> <b>위반 시 책임은 나에게 있음을 안다.</b>
+      <div class="desc">나는 이 약속을 어겼을 때의 법적·윤리적 책임이 나 자신에게 있다는 것을 분명히 안다.</div></div>
+
+    <div class="law">
+      📖 <b>참고 — 우리나라 법</b><br>
+      정보통신망법 제48조: <i>허락(정당한 접근권한) 없이 남의 정보통신망에 들어가면 처벌받는다.</i>
+      합법과 범죄를 가르는 건 기술이 아니라 딱 한 단어, <b>“허락”</b>이다.
+    </div>
+
+    <h2>서명란</h2>
+    <div class="sign">
+      <div class="sign-row"><div class="sign-label">이름</div><div class="sign-blank"></div></div>
+      <div class="sign-row"><div class="sign-label">학교 · 반</div><div class="sign-blank"></div></div>
+      <div class="sign-row"><div class="sign-label">날짜</div>
+        <div class="date-line">20<span></span> 년 &nbsp;<span></span> 월 &nbsp;<span></span> 일</div></div>
+      <div class="sign-row"><div class="sign-label">서명</div><div class="sign-blank"></div></div>
+    </div>
+
+    <div class="guardian">
+      <b>보호자 확인(선택):</b> 보호자 이름 <span class="gb"></span> 서명 <span class="gb"></span>
+    </div>
+
+    <p class="closing">위 내용을 모두 이해했으며, 나는 이 약속을 지킬 것을 서약합니다.</p>
+  </div>
+</body>
+</html>

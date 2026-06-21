@@ -25,9 +25,11 @@ fi
 echo
 IP=$(hostname -I 2>/dev/null | awk '{print $1}')
 echo "================ 접속 주소 (희생자 IP = ${IP:-<victim-ip>}) ================"
-echo "  DVWA       : http://${IP:-<victim-ip>}:8080    (admin / password)"
-echo "  NeoBank    : http://${IP:-<victim-ip>}:3001"
-echo "  MediForum  : http://${IP:-<victim-ip>}:3003"
-echo "  CTFd       : http://${IP:-<victim-ip>}:8000"
+echo "  강좌 사이트 : http://${IP:-<victim-ip>}:8090    ← 커리큘럼·교과서·다운로드"
+echo "  DVWA        : http://${IP:-<victim-ip>}:8080    (admin / password, Security=Low)"
+echo "  NeoBank     : http://${IP:-<victim-ip>}:3001    (alice@example.com / alice123)"
+echo "  MediForum   : http://${IP:-<victim-ip>}:3003"
+echo "  CTFd        : http://${IP:-<victim-ip>}:8000"
+echo "  AI 도우미   : http://${IP:-<victim-ip>}:8001"
 echo "==========================================================================="
 echo "상태 확인:  docker compose ps"
