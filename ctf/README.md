@@ -22,9 +22,14 @@ cd ../infra
 
 ## 1. CTFd 최초 셋업 (1회)
 
-1. `http://<victim-ip>:8000` 접속 → 안내에 따라 **대회 이름 / 관리자 계정** 생성.
-2. 가입 방식: **Settings → 회원가입 허용(Registration: Public)** 으로 두면 학생이 직접 가입.
-3. 시작/종료 시간은 비워두거나 수업 시간에 맞춘다.
+**(A) 자동 — 관리자 생성 + 토큰 발급 한 방에:**
+```bash
+pip install requests
+python3 setup_ctfd.py --ctfd http://<victim-ip>:8000 --admin admin --password '원하는비번' --email admin@ezweb.local
+# 출력 마지막 줄 TOKEN=... 을 2단계 import 에 사용
+```
+**(B) 수동:** `http://<victim-ip>:8000` 접속 → **대회 이름 / 관리자 계정** 생성 →
+**Settings → Registration: Public**(학생 직접 가입) → 시작/종료 시간 설정(선택).
 
 ## 2. 문제 일괄 등록 (AI/자동)
 
