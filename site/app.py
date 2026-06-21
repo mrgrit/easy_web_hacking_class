@@ -94,9 +94,42 @@ def lab(week):
     f = CONTENT / f"lab_week{week}.yaml"
     if not f.exists():
         abort(404)
-    # 실습 yaml 은 코드블록으로 그대로 보여준다(읽기 전용)
-    body = render_markdown("# 실습 " + week + " (lab)\n\n```yaml\n" + f.read_text(encoding="utf-8") + "\n```")
-    return render_template("doc.html", body=body, week=week, kind="실습",
+    import yaml
+    data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    p = []
+    p.append(f"<h1>실습 {week} — {html.escape(str(data.get('title','')))}</h1>")
+    try:
+        thr = int(float(data.get("pass_threshold", 0)) * 100)
+    except Exception:
+        thr = 0
+    p.append(f"<blockquote>난이도 <b>{html.escape(str(data.get('difficulty','')))}</b> · "
+             f"약 {data.get('duration_minutes','?')}분 · 통과 기준 {thr}%</blockquote>")
+    if data.get("description"):
+        p.append(render_markdown(str(data["description"])))
+    objs = data.get("objectives") or []
+    if objs:
+        p.append("<h2>학습 목표</h2>")
+        p.append(render_markdown("\n".join(f"{i+1}. {o}" for i, o in enumerate(objs))))
+    p.append("<hr>")
+    for st in data.get("steps", []):
+        p.append(f'<h2>단계 {st.get("order","")} '
+                 f'<span class="stepmeta">{html.escape(str(st.get("category","")))} · '
+                 f'{st.get("points","")}점</span></h2>')
+        p.append(render_markdown(str(st.get("instruction", ""))))
+        if st.get("hint"):
+            p.append(f'<p class="hint">💡 <b>힌트:</b> {html.escape(str(st["hint"]))}</p>')
+        ans = str(st.get("answer", "") or "").strip()
+        ad = str(st.get("answer_detail", "") or "").strip()
+        if ans or ad:
+            det = "<details class='ans'><summary>정답·해설 보기 (강사·복습용)</summary>"
+            if ans:
+                det += render_markdown("```\n" + ans + "\n```")
+            if ad:
+                det += render_markdown(ad)
+            det += "</details>"
+            p.append(det)
+        p.append("<hr>")
+    return render_template("doc.html", body="\n".join(p), week=week, kind="실습",
                            weeks=WEEKS, has_mermaid=False)
 
 
@@ -105,7 +138,7 @@ def _list_downloads():
         return []
     out = []
     for p in sorted(DOWNLOADS.iterdir()):
-        if p.is_file() and p.suffix.lower() in (".md", ".html", ".pdf"):
+        if p.is_file() and p.suffix.lower() in (".md", ".html", ".pdf", ".docx"):
             out.append(p.name)
     return out
 

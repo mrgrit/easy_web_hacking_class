@@ -7,10 +7,6 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-# CTFd 가 마운트할 빈 DB 파일이 없으면 만들어 둔다(첫 기동 시 CTFd 가 채움).
-mkdir -p ctfd
-[ -f ctfd/ctfd.db ] || : > ctfd/ctfd.db
-
 COMPOSE="docker compose"
 $COMPOSE version >/dev/null 2>&1 || COMPOSE="docker-compose"
 

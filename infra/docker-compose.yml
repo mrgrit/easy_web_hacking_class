@@ -54,16 +54,19 @@ services:
   ctfd:
     image: ctfd/ctfd:3.7.0
     container_name: ezweb-ctfd
+    user: "0:0"   # /data 볼륨(루트 소유)에 sqlite 쓰기 위해 root 로 실행
     ports:
       - "8000:8000"
     environment:
       - UPLOAD_FOLDER=/var/uploads
       - LOG_FOLDER=/var/log/CTFd
       - SECRET_KEY=ezweb-ctf-change-me
+      # DB 는 쓰기 가능한 named volume(/data)에 둔다. (호스트 파일 bind-mount 시 readonly 오류)
+      - DATABASE_URL=sqlite:////data/ctfd.db
     volumes:
       - ctfd-uploads:/var/uploads
       - ctfd-logs:/var/log/CTFd
-      - ./ctfd/ctfd.db:/opt/CTFd/CTFd/ctfd.db
+      - ctfd-db:/data
     restart: unless-stopped
     networks: [ezweb]
 
@@ -136,3 +139,4 @@ networks:
 volumes:
   ctfd-uploads:
   ctfd-logs:
+  ctfd-db:
