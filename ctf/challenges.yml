@@ -1,0 +1,89 @@
+# =============================================================================
+#  mini-CTF 문제 정의 (MediForum 표적)
+#  import_challenges.py 가 이 파일을 읽어 CTFd 에 일괄 등록한다.
+#  ⚠️ flag 가 들어 있는 강사용 파일 — 학생에게 배부 금지.
+#  {VICTIM} 은 import 시 실제 희생자 IP(또는 host)로 치환된다.
+# =============================================================================
+
+ctf:
+  name: "AI 웹 해킹 특강 mini-CTF"
+  target: "MediForum (http://{VICTIM}:3003)"
+
+challenges:
+  - id: 1
+    name: "페이지 속 깃발"
+    category: "Recon"
+    value: 50
+    description: |
+      MediForum(http://{VICTIM}:3003)을 둘러보세요. 화면에는 안 보이지만,
+      페이지 '소스'에는 누군가 남긴 메모가 숨어 있습니다.
+      💡 브라우저에서 Ctrl+U(소스 보기)를 눌러보세요.
+    flag: "flag{v13w_s0urc3_r3con}"
+    hints:
+      - { content: "게시판의 '공지' 글을 열고, 그 페이지의 소스를 보세요.", cost: 0 }
+      - { content: "HTML 주석 <!-- ... --> 안을 찾아보세요.", cost: 5 }
+
+  - id: 2
+    name: "인증 없는 회원 API"
+    category: "Web"
+    value: 100
+    description: |
+      MediForum 에는 로그인하지 않아도 열리는 API 가 있습니다.
+      거기서 '관리자'의 비밀 키를 찾으세요. 그 값이 깃발입니다.
+      대상: http://{VICTIM}:3003
+    flag: "flag{n0_4uth_us3r_ap1}"
+    hints:
+      - { content: "주소를 /api/users 처럼 추측해 보세요.", cost: 10 }
+      - { content: "응답(JSON)에서 role 이 admin 인 사용자의 api_key 필드를 보세요.", cost: 20 }
+
+  - id: 3
+    name: "남의 진료기록 (IDOR)"
+    category: "Web"
+    value: 150
+    description: |
+      진료기록을 보여주는 API 가 있습니다. 주소의 번호(id)를 바꿔
+      남의 기록까지 열어보세요. 어떤 기록의 처방/소견에 깃발이 숨어 있습니다.
+      대상: http://{VICTIM}:3003
+    flag: "flag{1d0r_m3d_r3c0rds}"
+    hints:
+      - { content: "/api/medical-records 와 /api/medical-records/<번호> 를 보세요.", cost: 15 }
+      - { content: "번호를 1부터 차례로 늘려가며 모든 기록을 확인하세요.", cost: 25 }
+
+  - id: 4
+    name: "관리자 쪽지 도청"
+    category: "Web"
+    value: 150
+    description: |
+      '관리자 전용'이라면서 정작 인증을 안 거는 API 가 있습니다.
+      관리자들이 주고받은 쪽지(DM)를 엿보면 깃발이 보입니다.
+      대상: http://{VICTIM}:3003
+    flag: "flag{4dm1n_dm_l34k}"
+    hints:
+      - { content: "주소를 /api/admin/... 처럼 추측해 보세요.", cost: 15 }
+      - { content: "/api/admin/dms 를 열어 쪽지 본문을 모두 읽어보세요.", cost: 25 }
+
+  - id: 5
+    name: "예측 가능한 세션"
+    category: "Web"
+    value: 200
+    description: |
+      로그인하면 받는 쿠키 'MFSID' 값을 잘 보세요. 규칙이 보일 겁니다.
+      관리자는 가장 먼저 로그인했습니다. 그 세션을 가로채 '관리자 전용 영역'의
+      깃발을 얻으세요.  대상: http://{VICTIM}:3003
+    flag: "flag{pr3d1ct4bl3_s3ss10n}"
+    hints:
+      - { content: "개발자도구 → 저장소 → 쿠키에서 MFSID 값을 확인하세요(예: sess-2001).", cost: 20 }
+      - { content: "MFSID 값을 sess-1001 로 바꾸고 /admin/secret 에 접속해 보세요.", cost: 40 }
+
+  - id: 6
+    name: "저장형 XSS — 관리자 봇 낚기"
+    category: "Web"
+    value: 200
+    description: |
+      게시글이나 댓글에 스크립트를 심으면, 그 글을 '검토하는 관리자(봇)'의
+      브라우저에서 실행됩니다. 관리자 검토를 발동시켜 깃발을 얻으세요.
+      회원가입 후 진행하세요.  대상: http://{VICTIM}:3003
+    flag: "flag{st0r3d_xss_4dm1n_b0t}"
+    hints:
+      - { content: "게시글/댓글 본문에 <script>alert(1)</script> 를 넣어 저장해 보세요.", cost: 20 }
+      - { content: "그 다음 /admin/review 에 접속하면 관리자 봇이 깃발을 내줍니다.", cost: 40 }

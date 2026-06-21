@@ -1,0 +1,233 @@
+lab_id: ezweb-week02
+title: "리눅스 7개 명령어 + Claude Code 설치 + 심리테스트 사이트 + GitHub"
+course: ai-web-hacking
+week: 2
+description: |
+  첫 '진짜' 실습. 터미널을 처음 여는 학생도 막히지 않게, 명령어는 딱 7개만 익힌다. 그다음
+  Claude Code(AI 비서)를 본인 컴퓨터에 설치하고, AI에게 한국어로 시켜 '심리테스트 웹사이트'를
+  완성한다. 마지막으로 그 사이트를 GitHub에 올리고 다시 받아본다. 어려운 코드는 전부 AI가 치고,
+  학생은 정해진 절차만 따른다. (공격자 VM = 학생 Ubuntu에서 진행)
+difficulty: easy
+duration_minutes: 180
+prerequisites:
+  - "Week 01 통과 + 해킹 서약서 서명"
+  - "Ubuntu 리눅스 환경(또는 강사가 제공한 VM)"
+  - "GitHub 계정(없으면 이번 실습 시작에 가입)"
+objectives:
+  - "리눅스 기본 명령어 7개로 파일/폴더를 다룬다"
+  - "Claude Code 설치 후 첫 대화로 파일을 생성시킨다"
+  - "AI에게 지시해 심리테스트 웹사이트를 완성하고 브라우저로 연다"
+  - "GitHub에 push 하고 다른 위치에서 clone 한다"
+pass_threshold: 0.7
+steps:
+
+  - order: 1
+    instruction: |
+      ## 🎯 목표
+      터미널을 열고, 명령어 7개로 작업 폴더를 만든다.
+      ## 개념 한 줄
+      터미널은 컴퓨터와 쪽지로 대화하는 창. 명령을 치면 답을 적어준다.
+      ## 💻 실행 명령
+      ```bash
+      pwd                 # 내가 어디 있나
+      mkdir mysite        # 작업 폴더 생성
+      cd mysite           # 그 폴더로 이동
+      pwd                 # 위치가 .../mysite 로 바뀐 것 확인
+      ls                  # 안에 뭐가 있나(아직 비었음)
+      ```
+      ## ✅ 합격 기준
+      마지막 `pwd` 결과가 `mysite` 로 끝난다.
+      ## 🧰 옵션 풀이
+      - `mkdir`=make directory(폴더 생성), `cd`=change directory(이동), `ls`=list(목록).
+    hint: "mkdir 로 만들고 cd 로 들어간다"
+    category: linux_basic
+    points: 10
+    answer: |
+      pwd; mkdir mysite; cd mysite; pwd; ls
+      → 마지막 pwd 가 '/.../mysite'
+    answer_detail: "터미널·파일시스템 첫 체험. 현재 위치가 mysite 폴더로 바뀌었으면 성공. 이후 모든 작업을 이 폴더에서 한다."
+    verify:
+      type: output_contains
+      expect: "mysite"
+      field: stdout
+    target: attacker
+
+  - order: 2
+    instruction: |
+      ## 🎯 목표
+      Claude Code(AI 비서)를 설치한다.
+      ## 개념 한 줄
+      Claude Code는 터미널에서 도는 AI 에이전트. 한국어로 시키면 파일을 만들고 명령을 실행한다.
+      ## 💻 실행 명령
+      ```bash
+      sudo apt-get update && sudo apt-get install -y nodejs npm
+      sudo npm install -g @anthropic-ai/claude-code
+      claude --version
+      ```
+      (sudo 비밀번호를 물으면 강사 안내에 따라 입력)
+      ## ✅ 합격 기준
+      `claude --version` 이 버전 번호를 출력한다.
+      ## 🧰 옵션 풀이
+      - `npm install -g`: 컴퓨터 전체에서 쓰도록 설치(-g=global).
+      - 설치가 처음이라 시간이 좀 걸릴 수 있다. 에러가 나면 화면을 그대로 강사/AI에게 보여준다.
+    hint: "npm install -g @anthropic-ai/claude-code"
+    category: setup
+    points: 15
+    answer: |
+      sudo npm install -g @anthropic-ai/claude-code && claude --version
+    answer_detail: "Claude Code 설치 확인. 버전 문자열이 출력되면 성공. 처음 실행 시 계정 로그인(연결)을 1회 진행한다."
+    verify:
+      type: output_contains
+      expect: "."
+      field: stdout
+    target: attacker
+
+  - order: 3
+    instruction: |
+      ## 🎯 목표
+      AI 비서와 첫 대화 — 말로 파일을 만들게 한다.
+      ## 개념 한 줄
+      에이전트는 '말'이 아니라 '행동'을 한다. 시키면 진짜로 파일이 생긴다.
+      ## 💻 해보기
+      ```bash
+      claude
+      ```
+      가 켜지면 한국어로 입력:
+      `이 폴더에 hello.txt 를 만들고 안에 '나의 첫 AI 비서'라고 써줘.`
+      잠시 후 종료하고 확인:
+      ```bash
+      cat hello.txt
+      ```
+      ## ✅ 합격 기준
+      `cat hello.txt` 출력에 `나의 첫 AI 비서` 가 보인다.
+      ## 🧰 옵션 풀이
+      - `cat`=파일 내용 출력. 에이전트가 정말 파일을 만들었는지 두 눈으로 확인하는 단계.
+    hint: "claude 안에서 한국어로 시킨 뒤 cat 으로 확인"
+    category: agent_first
+    points: 15
+    answer: |
+      (claude 안) "hello.txt 를 만들고 '나의 첫 AI 비서'라고 써줘"
+      cat hello.txt   → '나의 첫 AI 비서'
+    answer_detail: "AI 에이전트가 파일 생성이라는 '행동'을 수행함을 확인. cat 출력에 지정 문구가 보이면 성공. 첫 번째 '우와' 포인트."
+    verify:
+      type: output_contains
+      expect: "나의 첫 AI 비서"
+      field: stdout
+    target: attacker
+
+  - order: 4
+    instruction: |
+      ## 🎯 목표
+      Claude Code로 심리테스트 웹사이트를 만든다.
+      ## 개념 한 줄
+      웹페이지는 HTML(뼈대)·CSS(꾸밈)·JS(움직임). 직접 코딩 안 하고 AI에게 시킨다.
+      ## 💻 해보기 (claude 안에서 그대로 입력)
+      ```
+      심리테스트 웹사이트를 index.html 한 파일로 만들어줘.
+      질문 5개에 답하면 동물 유형(고양이/강아지/부엉이/돌고래) 결과가 나오고,
+      유형마다 설명과 이모지가 보이게 해줘. 파스텔톤으로 예쁘게, 모바일에서도 잘 보이게,
+      결과 화면엔 '다시 하기' 버튼도 넣어줘.
+      ```
+      마음에 안 들면 말로 수정: "배경을 더 알록달록하게", "질문을 학교생활 주제로 바꿔줘" 등.
+      ## ✅ 합격 기준
+      `ls` 에 `index.html` 이 보이고, 파일 크기가 0이 아니다.
+      ## 🧰 옵션 풀이
+      - 한 번에 완벽하지 않아도 된다. "에러 나는데 고쳐줘"처럼 말로 계속 다듬는 게 AI 작업 방식.
+    hint: "원하는 걸 구체적으로 한국어로. 수정도 말로."
+    category: build
+    points: 20
+    answer: |
+      (claude 안) 위 프롬프트 → index.html 생성. ls 로 확인.
+    answer_detail: "AI에게 자연어로 지시해 완성된 산출물을 얻는 핵심 경험. index.html이 생성되면 성공. 결과물의 완성도는 학생이 말로 반복 수정해 끌어올린다."
+    verify:
+      type: file_exists
+      expect: "index.html"
+    target: attacker
+
+  - order: 5
+    instruction: |
+      ## 🎯 목표
+      만든 사이트를 브라우저로 띄운다.
+      ## 개념 한 줄
+      작은 웹서버를 띄우면 내 사이트에 주소(http://localhost:5500)가 생긴다.
+      ## 💻 실행 명령
+      ```bash
+      python3 -m http.server 5500
+      ```
+      브라우저에서 `http://localhost:5500` 접속 → 심리테스트를 직접 해본다.
+      ## ✅ 합격 기준
+      브라우저에 심리테스트 화면이 뜨고, 5문항 후 결과가 나온다.
+      ## 🧰 옵션 풀이
+      - `python3 -m http.server 5500`: 현재 폴더를 5500번 포트로 서비스. 멈추려면 Ctrl+C.
+    hint: "http.server 띄우고 localhost:5500"
+    category: run
+    points: 15
+    answer: |
+      python3 -m http.server 5500  → http://localhost:5500 접속해 테스트 진행
+    answer_detail: "내가 만든 사이트가 실제 브라우저에서 동작하는 두 번째 '우와' 포인트. 결과 화면까지 도달하면 성공."
+    verify:
+      type: manual
+      check: "브라우저에서 심리테스트 결과 화면까지 확인."
+    target: attacker
+
+  - order: 6
+    instruction: |
+      ## 🎯 목표
+      내 사이트를 GitHub에 올린다(push).
+      ## 개념 한 줄
+      Git=저장 기록, GitHub=인터넷 보관소. AI 시대엔 빠르게 바뀌는 코드를 안전히 보관하는 필수 습관.
+      ## 💻 실행 명령
+      ```bash
+      # GitHub 웹에서 New repository → 'my-psychotest' 생성(빈 repo)
+      git init
+      git add .
+      git commit -m "내 첫 심리테스트 사이트"
+      git branch -M main
+      git remote add origin https://github.com/<내아이디>/my-psychotest.git
+      git push -u origin main
+      ```
+      ## ✅ 합격 기준
+      GitHub 저장소 페이지를 새로고침하면 `index.html` 이 올라와 있다.
+      ## 🧰 옵션 풀이
+      - `add`=올릴 파일 고르기, `commit`=저장 기록 남기기, `push`=인터넷에 올리기.
+      - 복잡하면 claude 에게 "이 폴더를 내 GitHub에 올려줘" 라고 시켜도 된다.
+    hint: "init → add → commit → push"
+    category: github
+    points: 15
+    answer: |
+      git init; git add .; git commit -m "..."; git branch -M main; git remote add origin <URL>; git push -u origin main
+    answer_detail: "버전관리·원격 백업 습관 형성. GitHub에 index.html이 보이면 성공. 세 번째 '우와' 포인트(인터넷에 내 작품 주소가 생김)."
+    verify:
+      type: manual
+      check: "GitHub 저장소에 index.html 이 보인다."
+    target: attacker
+
+  - order: 7
+    instruction: |
+      ## 🎯 목표
+      올린 작품을 다른 위치(집/다른 폴더)에서 다시 받는다(clone). 그리고 특강 자료도 받아본다.
+      ## 개념 한 줄
+      clone=저장소를 통째로 내려받기. 어디서나 이어서 작업할 수 있다.
+      ## 💻 실행 명령
+      ```bash
+      cd ~
+      git clone https://github.com/<내아이디>/my-psychotest.git
+      ls my-psychotest                 # index.html 이 받아짐
+      # (다음 주 표적도 미리 받아두기)
+      git clone https://github.com/mrgrit/easy_web_hacking_class.git
+      ```
+      ## ✅ 합격 기준
+      `ls my-psychotest` 에 `index.html` 이 보인다.
+      ## 🧰 옵션 풀이
+      - 집 컴퓨터에서도 같은 명령으로 받으면 끊김 없이 이어서 작업·발표 가능.
+    hint: "git clone <내 저장소 URL>"
+    category: github
+    points: 10
+    answer: |
+      git clone https://github.com/<내아이디>/my-psychotest.git; ls my-psychotest
+    answer_detail: "원격→로컬 복제 경험. clone 한 폴더에 index.html이 있으면 성공. '집에서도 이어서'가 가능해진다."
+    verify:
+      type: output_contains
+      expect: "index.html"
+      field: stdout
+    target: attacker

@@ -1,0 +1,173 @@
+lab_id: ezweb-week05
+title: "mini-CTF — MediForum 깃발 사냥 (6문제)"
+course: ai-web-hacking
+week: 5
+description: |
+  배운 모든 기법을 게임으로 겨룬다. 처음 보는 표적 MediForum(:3003)에 숨은 깃발 6개를 찾아
+  CTFd(:8000)에 제출해 점수를 얻는다. 이 실습지는 '방향'만 알려준다 — 정확한 깃발 값과 풀이는
+  적지 않는다(그게 CTF다). 막히면 AI 도우미에게 방향을 물어라(깃발은 안 알려준다).
+  ※ 강사용 상세 풀이(정확한 페이로드·깃발 획득법)는 solutions/SOLUTIONS.md 에 별도 보관(학생 배부 금지).
+difficulty: medium
+duration_minutes: 240
+prerequisites:
+  - "Week 03·04 통과(정찰·IDOR·인증결함·세션·XSS 체득)"
+  - "희생자 VM에서 ./start.sh 로 MediForum(:3003)·CTFd(:8000) 기동"
+  - "CTFd 회원가입 완료"
+objectives:
+  - "CTFd에 회원가입하고 깃발을 제출해 점수를 얻는다"
+  - "정찰·PII 노출·IDOR·인증결함을 새 사이트에 스스로 적용한다"
+  - "예측 가능한 세션과 저장형 XSS(응용)로 보스 문제를 푼다"
+  - "AI 도우미에게 좋은 질문으로 힌트를 얻는다"
+pass_threshold: 0.5
+steps:
+
+  - order: 1
+    instruction: |
+      ## 🎯 워밍업 — CTFd 가입 + 정찰
+      CTFd(:8000)에 회원가입하고, 리더보드/문제 화면에 익숙해진다. 첫 문제는 'Recon'.
+      ## 개념 한 줄(배운 곳: W03 개발자도구)
+      화면에 안 보여도 페이지 '소스'에는 더 많은 게 적혀 있다.
+      ## 🔎 어디부터 보나
+      - MediForum(:3003)을 둘러보며, 브라우저 **소스 보기(Ctrl+U)** 와 개발자도구로 본다.
+      - 화면에는 안 보이지만 소스(주석 등)에 숨은 `flag{...}` 가 있다.
+      ## ✅ 합격
+      flag{...} 형태의 깃발을 찾아 CTFd 1번 문제에 제출 → 정답 처리.
+      ## 🤖 AI 도우미 질문 예시
+      "웹페이지에서 화면에는 안 보이는데 소스에는 있는 정보는 어디서 봐?"
+    hint: "Ctrl+U (소스 보기) / 주석"
+    category: recon
+    points: 10
+    answer: |
+      방법: 페이지 소스(특히 게시글 본문)의 HTML 주석에 숨은 깃발을 찾는다.
+      정확한 위치·깃발 값은 solutions/SOLUTIONS.md (강사용) 참조.
+    answer_detail: "정찰=화면 너머 소스 관찰. 학생이 소스/주석에서 깃발을 찾아 CTFd에 제출·정답 처리되면 통과. 상세는 강사용 풀이 참조."
+    verify:
+      type: ctfd_submit
+      check: "CTFd 1번(Recon) 문제 정답 처리."
+    target: victim
+
+  - order: 2
+    instruction: |
+      ## 🎯 인증 없는 회원 API (PII)
+      로그인하지 않아도 열리는 API에서 관리자의 비밀 키를 줍는다.
+      ## 개념 한 줄(배운 곳: W04 PII 노출)
+      인증을 깜빡한 `/api/...` 는 개인정보를 통째로 내준다.
+      ## 🔎 어디부터 보나
+      - 회원·검색 관련 API 주소를 추측해 본다(예: 사용자 목록류).
+      - 응답(JSON)에서 관리자 계정의 'api_key' 같은 비밀 필드를 본다 — 거기에 깃발이.
+      ## ✅ 합격
+      관리자의 비밀 키(=깃발)를 찾아 CTFd 2번에 제출.
+      ## 🤖 AI 도우미 질문 예시
+      "로그인 없이 개인정보가 새는 API 는 보통 어떤 주소 형태야?"
+    hint: "/api/ 로 시작하는 사용자 목록"
+    category: web
+    points: 15
+    answer: |
+      방법: 인증이 없는 사용자 목록 API를 호출해 관리자 레코드의 비밀 키 필드에서 깃발 획득.
+      정확한 엔드포인트·깃발은 solutions/SOLUTIONS.md 참조.
+    answer_detail: "인증 누락 API에서 PII(api_key)가 평문 노출. 학생이 관리자 키=깃발을 제출하면 통과."
+    verify:
+      type: ctfd_submit
+      check: "CTFd 2번(PII API) 문제 정답 처리."
+    target: victim
+
+  - order: 3
+    instruction: |
+      ## 🎯 남의 진료기록 (IDOR)
+      진료기록 주소의 번호를 바꿔 남의 기록을 열어 깃발을 찾는다.
+      ## 개념 한 줄(배운 곳: W04 IDOR)
+      주소의 id 만 바꿔도 막지 않으면 남의 데이터가 보인다.
+      ## 🔎 어디부터 보나
+      - 진료기록(medical-records) 관련 API를 찾아, id 를 1,2,3... 바꿔가며 열어 본다.
+      - 어떤 기록의 처방/소견에 깃발이 숨어 있다.
+      ## ✅ 합격
+      깃발이 담긴 진료기록을 찾아 CTFd 3번에 제출.
+      ## 🤖 AI 도우미 질문 예시
+      "IDOR 가 뭐야? 주소의 번호를 어떻게 바꿔봐야 해?"
+    hint: "medical-records 의 id 를 바꿔보기"
+    category: idor
+    points: 15
+    answer: |
+      방법: 진료기록 API의 id 를 순회해 깃발이 담긴 레코드를 찾는다.
+      정확한 경로·깃발은 solutions/SOLUTIONS.md 참조.
+    answer_detail: "IDOR로 임의 진료기록 열람. 깃발 레코드를 찾아 제출하면 통과."
+    verify:
+      type: ctfd_submit
+      check: "CTFd 3번(IDOR) 문제 정답 처리."
+    target: victim
+
+  - order: 4
+    instruction: |
+      ## 🎯 관리자 쪽지 도청
+      인증이 빠진 관리자 전용 API를 찾아 관리자들의 쪽지(DM)를 엿본다.
+      ## 개념 한 줄(배운 곳: W03/W04 인증 결함)
+      '관리자용'이라면서 정작 인증을 안 거는 API가 있다.
+      ## 🔎 어디부터 보나
+      - admin 관련 API 주소를 추측해 본다(예: 관리자 DM 목록).
+      - 쪽지 본문 중 하나에 깃발이 들어 있다.
+      ## ✅ 합격
+      관리자 DM에서 깃발을 찾아 CTFd 4번에 제출.
+      ## 🤖 AI 도우미 질문 예시
+      "관리자 전용인데 인증이 빠진 API 는 어떻게 찾아?"
+    hint: "/api/admin/ 류 엔드포인트"
+    category: web
+    points: 15
+    answer: |
+      방법: 인증 없는 관리자 DM API를 호출해 깃발이 담긴 쪽지를 찾는다.
+      정확한 경로·깃발은 solutions/SOLUTIONS.md 참조.
+    answer_detail: "관리자 DM API 인증 누락. 깃발 DM을 찾아 제출하면 통과."
+    verify:
+      type: ctfd_submit
+      check: "CTFd 4번(관리자 DM) 문제 정답 처리."
+    target: victim
+
+  - order: 5
+    instruction: |
+      ## 🎯 (응용) 예측 가능한 세션 — 관리자로 변신
+      쿠키 값의 규칙을 추측해 관리자 세션을 가로채고, 관리자 전용 페이지의 깃발을 본다.
+      ## 개념 한 줄(배운 곳: W03 쿠키/세션)
+      세션 쿠키가 'sess-1001'처럼 규칙적이면, 값을 바꿔 남의 세션으로 들어갈 수 있다.
+      ## 🔎 어디부터 보나
+      - 로그인해 내 쿠키 `MFSID` 값을 본다(개발자도구). 형태(규칙)를 관찰한다.
+      - 관리자는 가장 먼저 로그인했다 — 더 '낮은/이른' 번호를 추측해 쿠키를 바꿔본다.
+      - 관리자 전용 영역(admin 전용 경로)에 들어가 깃발을 얻는다.
+      ## ✅ 합격
+      관리자로 변신해 관리자 전용 페이지의 깃발을 CTFd 5번에 제출.
+      ## 🤖 AI 도우미 질문 예시
+      "쿠키 MFSID 값이 규칙적이면 그걸로 뭘 할 수 있어? 어떻게 바꿔 시험해?"
+    hint: "MFSID 쿠키 값을 더 낮은 번호로 바꿔보기"
+    category: web
+    points: 20
+    answer: |
+      방법: MFSID 쿠키를 관리자 고정 세션 값으로 교체 → 관리자 전용 경로에서 깃발.
+      정확한 쿠키 값·경로·깃발은 solutions/SOLUTIONS.md 참조.
+    answer_detail: "예측 가능한 세션(V14) 악용. 쿠키 교체로 관리자 권한 획득 후 admin 전용 깃발 제출하면 통과. 응용 난이도."
+    verify:
+      type: ctfd_submit
+      check: "CTFd 5번(예측 세션) 문제 정답 처리."
+    target: victim
+
+  - order: 6
+    instruction: |
+      ## 🎯 (응용·보스) 저장형 XSS — 관리자 봇 낚기
+      글이나 댓글에 스크립트를 심어, 그 글을 '검토하는 관리자(봇)'를 통해 깃발을 얻는다.
+      ## 개념 한 줄(배운 곳: W03/W04 XSS)
+      저장된 글이 필터 없이 출력되면, 그 글을 보는 사람의 브라우저에서 내 스크립트가 실행된다.
+      ## 🔎 어디부터 보나
+      - 회원가입/로그인 후, 게시글 또는 댓글 본문에 <script> 를 포함한 글을 올려 본다.
+      - 관리자가 '신고된 글을 검토'하는 경로(admin 검토)를 호출하면, 스크립트가 심겨 있을 때 깃발이 나온다.
+      ## ✅ 합격
+      저장형 XSS를 심어 관리자 검토를 발동시키고, 나온 깃발을 CTFd 6번에 제출.
+      ## 🤖 AI 도우미 질문 예시
+      "저장형 XSS 가 뭐야? 어디에 <script> 를 넣어야 다른 사람에게 실행돼?"
+    hint: "게시글/댓글 본문에 <script>"
+    category: xss
+    points: 20
+    answer: |
+      방법: 게시글/댓글에 <script>...</script> 저장 → 관리자 검토 경로 호출 시 깃발 노출.
+      정확한 경로·깃발은 solutions/SOLUTIONS.md 참조.
+    answer_detail: "저장형 XSS(|safe 렌더) + 관리자 봇 시뮬레이션. 스크립트 저장 후 검토 경로에서 깃발 획득·제출하면 통과. 보스 난이도."
+    verify:
+      type: ctfd_submit
+      check: "CTFd 6번(저장형 XSS) 문제 정답 처리."
+    target: victim

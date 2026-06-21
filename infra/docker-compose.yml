@@ -1,0 +1,126 @@
+# =============================================================================
+#  AI 웹 해킹 특강 — 희생자(victim) 인프라
+#  =============================================================================
+#  ⚠️  여기 올라가는 사이트들은 "일부러 취약하게" 만든 교육용 표적입니다.
+#      절대 인터넷에 공개하지 마세요. 폐쇄망 / 로컬 VM 안에서만 띄웁니다.
+#
+#  기본(default)으로 뜨는 것 = 특강에서 실제로 쓰는 4종:
+#     - dvwa       : Week 03 웹 해킹 실습용 표적            http://<victim-ip>:8080
+#     - neobank    : Week 04 AI 모의해킹 표적 (가상 은행)     http://<victim-ip>:3001
+#     - mediforum  : Week 05 mini-CTF 표적 (의료 커뮤니티)    http://<victim-ip>:3003
+#     - ctfd       : Week 05 CTF 플랫폼 (리더보드/회원가입)   http://<victim-ip>:8000
+#
+#  추가(profile: extras)로만 뜨는 것 = 강사 재량 보너스:
+#     docker compose --profile extras up -d
+#     - govportal / aicompanion / adminconsole / juiceshop
+# =============================================================================
+
+name: ezweb-victim
+
+services:
+  # ---- Week 03: DVWA (Damn Vulnerable Web Application) ----------------------
+  dvwa:
+    image: ghcr.io/digininja/dvwa:latest
+    container_name: ezweb-dvwa
+    ports:
+      - "8080:80"
+    environment:
+      # 비번 없는 기본 설정. 학생은 admin / password 로 로그인.
+      - DVWA_DB_PASSWORD=p@ssw0rd
+    restart: unless-stopped
+    networks: [ezweb]
+
+  # ---- Week 04: NeoBank (가상 은행, 커스텀 취약 사이트) ----------------------
+  neobank:
+    build: ./vuln-sites/neobank
+    image: ezweb-neobank:vulnerable
+    container_name: ezweb-neobank
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    networks: [ezweb]
+
+  # ---- Week 05: MediForum (의료 커뮤니티, mini-CTF 표적) ---------------------
+  mediforum:
+    build: ./vuln-sites/mediforum
+    image: ezweb-mediforum:vulnerable
+    container_name: ezweb-mediforum
+    ports:
+      - "3003:3003"
+    restart: unless-stopped
+    networks: [ezweb]
+
+  # ---- Week 05: CTFd (CTF 플랫폼 — 회원가입 / 리더보드) ----------------------
+  ctfd:
+    image: ctfd/ctfd:3.7.0
+    container_name: ezweb-ctfd
+    ports:
+      - "8000:8000"
+    environment:
+      - UPLOAD_FOLDER=/var/uploads
+      - LOG_FOLDER=/var/log/CTFd
+      - SECRET_KEY=ezweb-ctf-change-me
+    volumes:
+      - ctfd-uploads:/var/uploads
+      - ctfd-logs:/var/log/CTFd
+      - ./ctfd/ctfd.db:/opt/CTFd/CTFd/ctfd.db
+    restart: unless-stopped
+    networks: [ezweb]
+
+  # ---- Week 05: mini-CTF AI 도우미 (힌트 챗봇, flag 미노출) ------------------
+  ai-helper:
+    build: ../ctf/ai-helper
+    image: ezweb-ai-helper:latest
+    container_name: ezweb-ai-helper
+    ports:
+      - "8001:8001"
+    environment:
+      # 셋 다 비우면 '오프라인 폴백'(문제별 단계 힌트)으로 항상 동작한다.
+      # Anthropic 사용:  ANTHROPIC_API_KEY=sk-ant-...
+      # Ollama(개인 GPU) 사용:  OLLAMA_URL=http://<gpu>:11434  OLLAMA_MODEL=llama3
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-haiku-4-5}
+      - OLLAMA_URL=${OLLAMA_URL:-}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+    restart: unless-stopped
+    networks: [ezweb]
+
+  # ====== 아래는 보너스(profile: extras) — 기본 up 에서는 뜨지 않음 ==========
+  govportal:
+    build: ./vuln-sites/govportal
+    image: ezweb-govportal:vulnerable
+    container_name: ezweb-govportal
+    ports: ["3002:3002"]
+    profiles: ["extras"]
+    networks: [ezweb]
+
+  aicompanion:
+    build: ./vuln-sites/aicompanion
+    image: ezweb-aicompanion:vulnerable
+    container_name: ezweb-aicompanion
+    ports: ["3005:3005"]
+    profiles: ["extras"]
+    networks: [ezweb]
+
+  adminconsole:
+    build: ./vuln-sites/adminconsole
+    image: ezweb-adminconsole:vulnerable
+    container_name: ezweb-adminconsole
+    ports: ["3004:3004"]
+    profiles: ["extras"]
+    networks: [ezweb]
+
+  juiceshop:
+    image: bkimminich/juice-shop:latest
+    container_name: ezweb-juiceshop
+    ports: ["3000:3000"]
+    profiles: ["extras"]
+    networks: [ezweb]
+
+networks:
+  ezweb:
+    driver: bridge
+
+volumes:
+  ctfd-uploads:
+  ctfd-logs:

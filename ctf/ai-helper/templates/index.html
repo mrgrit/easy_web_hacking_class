@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🤖 mini-CTF AI 도우미</title>
+<style>
+  body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#0d1117;color:#e6edf3;margin:0;padding:0}
+  .wrap{max-width:680px;margin:0 auto;padding:16px}
+  h1{font-size:20px}
+  .sub{color:#8b949e;font-size:13px;margin-top:-8px}
+  select,textarea,button{font-size:15px;border-radius:8px;border:1px solid #30363d;background:#161b22;color:#e6edf3;padding:10px}
+  select,textarea{width:100%;box-sizing:border-box;margin:6px 0}
+  button{background:#1f6feb;border:none;cursor:pointer;font-weight:600}
+  button:hover{background:#388bfd}
+  #log{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+  .msg{padding:10px 12px;border-radius:10px;max-width:88%;white-space:pre-wrap;line-height:1.5}
+  .me{align-self:flex-end;background:#1f6feb}
+  .ai{align-self:flex-start;background:#21262d;border:1px solid #30363d}
+  .tag{font-size:11px;color:#8b949e;margin-bottom:2px}
+  .note{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px;font-size:13px;color:#8b949e;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🤖 mini-CTF AI 도우미</h1>
+  <p class="sub">막히면 물어봐! 단, <b>깃발(flag)은 안 알려줘.</b> 방향만 줄게 🙂</p>
+
+  <label>지금 풀고 있는 문제</label>
+  <select id="challenge">
+    {% for cid, ch in challenges.items() %}
+    <option value="{{cid}}">{{cid}}. {{ch.name}}</option>
+    {% endfor %}
+  </select>
+
+  <textarea id="q" rows="3" placeholder="예: 이 문제 어디부터 봐야 해? / IDOR 가 뭐야?"></textarea>
+  <button onclick="ask()">물어보기</button>
+
+  <div id="log"></div>
+
+  <div class="note">
+    💡 좋은 질문이 좋은 힌트를 부른다. "방금 ○○를 해봤는데 안 됐어, 다음엔 뭘 보면 좋아?" 처럼 물어봐.
+  </div>
+</div>
+
+<script>
+function add(text, who, tag){
+  const log = document.getElementById('log');
+  const d = document.createElement('div');
+  d.className = 'msg ' + who;
+  if(tag){ const t=document.createElement('div'); t.className='tag'; t.textContent=tag; d.appendChild(t); }
+  const body=document.createElement('div'); body.textContent=text; d.appendChild(body);
+  log.appendChild(d); window.scrollTo(0, document.body.scrollHeight);
+}
+async function ask(){
+  const q = document.getElementById('q').value.trim();
+  const cid = document.getElementById('challenge').value;
+  if(!q) return;
+  add(q, 'me');
+  document.getElementById('q').value='';
+  add('생각 중...', 'ai');
+  try{
+    const r = await fetch('/ask', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({question:q, challenge:cid})});
+    const j = await r.json();
+    document.getElementById('log').lastChild.remove();
+    add(j.answer, 'ai', 'AI 도우미 ('+(j.backend||'offline')+')');
+  }catch(e){
+    document.getElementById('log').lastChild.remove();
+    add('도우미 연결에 실패했어. 강사에게 알려줘.', 'ai');
+  }
+}
+document.getElementById('q').addEventListener('keydown', e=>{ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) ask(); });
+</script>
+</body>
+</html>
