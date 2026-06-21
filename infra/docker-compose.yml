@@ -5,7 +5,7 @@
 #      절대 인터넷에 공개하지 마세요. 폐쇄망 / 로컬 VM 안에서만 띄웁니다.
 #
 #  기본(default)으로 뜨는 것 = 특강에서 실제로 쓰는 4종:
-#     - dvwa       : Week 03 웹 해킹 실습용 표적            http://<victim-ip>:8080
+#     - dvwa       : Week 03 웹 해킹 실습용 표적            http://<victim-ip>:8088
 #     - neobank    : Week 04 AI 모의해킹 표적 (가상 은행)     http://<victim-ip>:3001
 #     - mediforum  : Week 05 mini-CTF 표적 (의료 커뮤니티)    http://<victim-ip>:3003
 #     - ctfd       : Week 05 CTF 플랫폼 (리더보드/회원가입)   http://<victim-ip>:8000
@@ -23,7 +23,7 @@ services:
     image: ghcr.io/digininja/dvwa:latest
     container_name: ezweb-dvwa
     ports:
-      - "8080:80"
+      - "8088:80"
     environment:
       # 비번 없는 기본 설정. 학생은 admin / password 로 로그인.
       - DVWA_DB_PASSWORD=p@ssw0rd

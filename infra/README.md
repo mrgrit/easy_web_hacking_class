@@ -42,7 +42,7 @@ cd infra
 | 사이트 | 주소 | 쓰는 주차 | 로그인 |
 |--------|------|-----------|--------|
 | **강좌 사이트** | `http://<victim-ip>:8090` | 전 주차 | 없음 (커리큘럼·교과서·실습·다운로드 포털) |
-| **DVWA** | `http://<victim-ip>:8080` | Week 03 | `admin` / `password` (첫 접속 시 *Create / Reset Database*) |
+| **DVWA** | `http://<victim-ip>:8088` | Week 03 | `admin` / `password` (첫 접속 시 *Create / Reset Database*) |
 | **NeoBank** | `http://<victim-ip>:3001` | Week 04 | 데모계정 `alice@example.com` / `alice123` (그 외 bob/carol/teller1, admin) |
 | **MediForum** | `http://<victim-ip>:3003` | Week 05 (CTF 표적) | 사이트 내 **회원가입** 후 로그인 |
 | **CTFd** | `http://<victim-ip>:8000` | Week 05 (CTF 플랫폼) | 최초 1회 관리자 셋업 |
@@ -54,7 +54,7 @@ cd infra
 
 ## 2. DVWA 첫 설정 (Week 03 전에 1회)
 
-1. `http://<victim-ip>:8080` 접속 → `admin` / `password` 로그인
+1. `http://<victim-ip>:8088` 접속 → `admin` / `password` 로그인
 2. 맨 아래 **Create / Reset Database** 클릭
 3. 좌측 **DVWA Security** → **Low** 로 설정 후 *Submit*
    - 초보 학생용이라 **반드시 Low** 로 둡니다. (변수 없이 딱 짜인 결과가 나오게)

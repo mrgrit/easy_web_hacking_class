@@ -22,7 +22,7 @@ echo
 IP=$(hostname -I 2>/dev/null | awk '{print $1}')
 echo "================ 접속 주소 (희생자 IP = ${IP:-<victim-ip>}) ================"
 echo "  강좌 사이트 : http://${IP:-<victim-ip>}:8090    ← 커리큘럼·교과서·다운로드"
-echo "  DVWA        : http://${IP:-<victim-ip>}:8080    (admin / password, Security=Low)"
+echo "  DVWA        : http://${IP:-<victim-ip>}:8088    (admin / password, Security=Low)"
 echo "  NeoBank     : http://${IP:-<victim-ip>}:3001    (alice@example.com / alice123)"
 echo "  MediForum   : http://${IP:-<victim-ip>}:3003"
 echo "  CTFd        : http://${IP:-<victim-ip>}:8000"

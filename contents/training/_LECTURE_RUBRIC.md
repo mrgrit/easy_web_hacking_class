@@ -32,7 +32,7 @@
 
 ## 4. 우리 인프라 사실 (지어내지 말 것)
 - VM 2대: **공격자**(학생 Ubuntu + Claude Code + 브라우저/curl) ↔ **희생자**(Docker 호스트).
-- 희생자 포트: DVWA `:8080`(admin/password, Security **Low**), NeoBank `:3001`, MediForum `:3003`,
+- 희생자 포트: DVWA `:8088`(admin/password, Security **Low**), NeoBank `:3001`, MediForum `:3003`,
   CTFd `:8000`. 보너스: govportal `:3002`, aicompanion `:3005`, adminconsole `:3004`, juiceshop `:3000`.
 - 기동: `cd infra && ./start.sh`. sudo 비번이 필요하면 환경에 따름.
 - 커스텀 사이트 출처: github.com/mrgrit/ccc/contents/vuln-sites.

