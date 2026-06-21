@@ -96,8 +96,47 @@ def build(week):
     print(f"  생성: {out.name}  (단계 {len(steps)}개)")
 
 
+def build_pledge():
+    doc = Document()
+    doc.add_heading("🔐 보안 윤리 서약서", level=0)
+    doc.add_paragraph("AI 웹 해킹 특강").alignment = WD_ALIGN_PARAGRAPH.CENTER
+    doc.add_paragraph(
+        "해킹은 자물쇠를 따는 기술과 같습니다. 잘 쓰면 사람을 지키고, 잘못 쓰면 사람을 다치게 합니다. "
+        "그래서 우리는 도구를 배우기 전에 약속부터 합니다. 강력한 기술일수록 약속이 먼저입니다. "
+        "아래 5가지를 읽고 동의한다면 이름과 날짜를 적고 서명하세요. 이 서약서가 다음 모든 주차의 입장권입니다.")
+    doc.add_heading("나의 서약", level=2)
+    pledges = [
+        ("① 허락된 곳에서만 한다.",
+         "나는 이 특강이 연습용으로 만든 표적(DVWA·NeoBank·MediForum·CTFd)에서만 배운 기술을 쓴다."),
+        ("② 남의 시스템은 건드리지 않는다.",
+         "나는 허락받지 않은 다른 사람·학교·회사의 시스템에 절대 무단으로 접근하지 않는다."),
+        ("③ 알게 된 약점은 악용하지 않고 책임 있게 알린다.",
+         "나는 우연히 약점을 발견해도 나쁜 데 쓰지 않고, 고칠 수 있도록 제대로 알린다."),
+        ("④ 배운 기술을 좋은 방향으로 쓴다.",
+         "나는 이 기술을 누군가를 지키고 더 안전한 세상을 만드는 데 쓴다(화이트해커처럼)."),
+        ("⑤ 위반 시 책임은 나에게 있음을 안다.",
+         "나는 이 약속을 어겼을 때의 법적·윤리적 책임이 나 자신에게 있다는 것을 분명히 안다."),
+    ]
+    for head, body in pledges:
+        p = doc.add_paragraph()
+        p.add_run(head).bold = True
+        doc.add_paragraph(body)
+    doc.add_paragraph(
+        "📖 참고 — 정보통신망법 제48조: 허락(정당한 접근권한) 없이 남의 정보통신망에 들어가면 "
+        "처벌받는다. 합법과 범죄를 가르는 건 기술이 아니라 딱 한 단어, ‘허락’이다.")
+    doc.add_heading("서명란", level=2)
+    for lbl in ["이름", "학교 · 반", "날짜", "서명"]:
+        blank_line(doc, lbl)
+    doc.add_paragraph("보호자 확인(선택): 보호자 이름 ______________   서명 ______________")
+    doc.add_paragraph("위 내용을 모두 이해했으며, 나는 이 약속을 지킬 것을 서약합니다.")
+    out = OUT / "보안서약서.docx"
+    doc.save(str(out))
+    print(f"  생성: {out.name}")
+
+
 if __name__ == "__main__":
-    print("주차별 워크북(.docx) 생성 중...")
+    print("배부 자료(.docx) 생성 중...")
+    build_pledge()
     for wk in WEEK_TITLES:
         build(wk)
     print("완료.")

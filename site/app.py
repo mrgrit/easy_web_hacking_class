@@ -55,6 +55,15 @@ WEEKS = {
            "hours": "4시간+", "emoji": "🏁"},
 }
 
+# 주차별 실습 페이지에서 내려받게 할 배부 자료(.docx). Week01 엔 보안서약서도 함께.
+WEEK_DOWNLOADS = {
+    "01": ["보안서약서.docx", "실습워크북_Week01.docx"],
+    "02": ["실습워크북_Week02.docx"],
+    "03": ["실습워크북_Week03.docx"],
+    "04": ["실습워크북_Week04.docx"],
+    "05": ["실습워크북_Week05.docx"],
+}
+
 app = Flask(__name__)
 
 
@@ -104,6 +113,11 @@ def lab(week):
         thr = 0
     p.append(f"<blockquote>난이도 <b>{html.escape(str(data.get('difficulty','')))}</b> · "
              f"약 {data.get('duration_minutes','?')}분 · 통과 기준 {thr}%</blockquote>")
+    # 이 주차 배부 자료(.docx) 다운로드 링크
+    dls = [f for f in WEEK_DOWNLOADS.get(week, []) if (DOWNLOADS / f).is_file()]
+    if dls:
+        links = " · ".join(f'<a href="/download/{f}">📄 {f}</a>' for f in dls)
+        p.append(f'<div class="dlbox">⬇️ <b>이 주차 자료</b> (다운로드): {links}</div>')
     if data.get("description"):
         p.append(render_markdown(str(data["description"])))
     objs = data.get("objectives") or []

@@ -54,6 +54,8 @@ a:hover{text-decoration:underline}
 .doc :not(pre)>code{background:#0d1117;border:1px solid var(--line);border-radius:5px;padding:1px 5px}
 .doc blockquote{border-left:4px solid var(--blue);margin:1em 0;padding:.4em 1em;background:#0d1117;color:#c9d1d9}
 .doc .mermaid{background:#fff;border-radius:10px;padding:14px;margin:1em 0;text-align:center}
+.doc .dlbox{background:#0f1d2e;border:1px solid var(--blue);border-radius:10px;padding:10px 14px;margin:.4em 0 1em}
+.doc .dlbox a{margin:0 2px}
 .doc .stepmeta{color:var(--muted);font-size:.7em;font-weight:600}
 .doc .hint{background:#13251a;border:1px solid var(--green);border-radius:8px;padding:8px 12px}
 .doc details.ans{background:#0d1117;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:.6em 0}

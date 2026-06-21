@@ -10,7 +10,7 @@ description: |
 difficulty: easy
 duration_minutes: 180
 prerequisites:
-  - "Week 01 통과 + 해킹 서약서 서명"
+  - "Week 01 통과 + 보안 서약서 서명"
   - "Ubuntu 리눅스 환경(또는 강사가 제공한 VM)"
   - "GitHub 계정(없으면 이번 실습 시작에 가입)"
 objectives:

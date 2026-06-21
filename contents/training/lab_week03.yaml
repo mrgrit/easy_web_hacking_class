@@ -10,7 +10,7 @@ description: |
 difficulty: medium
 duration_minutes: 300
 prerequisites:
-  - "Week 02 통과(터미널/파일 다루기), 해킹 서약 유효"
+  - "Week 02 통과(터미널/파일 다루기), 보안 서약 유효"
   - "희생자 VM에서 ./start.sh 로 DVWA 기동, http://<victim-ip>:8088 접속 가능"
   - "DVWA: admin/password 로그인 → Create/Reset Database → Security=Low 설정 완료"
 objectives:
