@@ -1,6 +1,8 @@
 # CTFd 런타임 DB / 업로드 (실습 중 생성)
 infra/ctfd/ctfd.db
 infra/ctfd/*.db-journal
+# setup.sh 가 만드는 CTFd 자동화용 파이썬 venv
+infra/.ctf-venv/
 *.pyc
 __pycache__/
 .DS_Store

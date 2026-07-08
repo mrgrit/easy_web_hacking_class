@@ -22,8 +22,14 @@ graph TD
 - Ubuntu 22.04+ (또는 Docker 가 도는 리눅스)
 - Docker + Docker Compose 플러그인
 
+> **🚀 아무것도 안 깔렸다면** 레포 루트의 한 방 스크립트가 Docker/파이썬 설치부터 서버 기동·
+> CTFd 자동셋업·DVWA 초기화까지 전부 해줍니다 (아래 수동 절차 대신):
+> ```bash
+> ./setup.sh          # 레포 루트에서
+> ```
+
 ```bash
-# Docker 설치 (Ubuntu)
+# (수동) Docker 설치 (Ubuntu)
 sudo apt-get update
 sudo apt-get install -y docker.io docker-compose-plugin
 sudo usermod -aG docker $USER   # 로그아웃 후 재로그인하면 sudo 없이 docker 사용

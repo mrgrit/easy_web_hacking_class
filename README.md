@@ -62,6 +62,13 @@ cd infra && ./start.sh          # 강좌 사이트가 :8090 에 함께 뜸
 
 복잡한 인프라 없이 **VM 두 대**(또는 노트북 한 대)면 됩니다. 자세한 건 [`infra/README.md`](infra/README.md).
 
+**🚀 맨바닥에서 한 방 (리눅스만 깔린 상태):** Docker·파이썬 등 필요한 걸 전부 설치하고,
+서버 기동 + CTFd 관리자·문제 자동 등록 + DVWA 초기화까지 한 번에:
+```bash
+./setup.sh              # 다른 PC에서 접속할 땐:  VICTIM_IP=192.168.0.50 ./setup.sh
+```
+
+**이미 Docker 가 깔려 있으면** 기동만:
 ```bash
 cd infra
 ./start.sh        # 강좌사이트 + DVWA + NeoBank + MediForum + CTFd + AI도우미 한 번에 기동
