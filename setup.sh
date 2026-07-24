@@ -265,49 +265,6 @@ except Exception as e:
     print("     DVWA 자동설정 실패(브라우저에서 admin/password 로그인 후 "
           "Create/Reset Database 1회 클릭):", e)
     sys.exit(1)
-PYDVWA'
-import re, sys
-try:
-    import requests
-except Exception:
-    sys.exit(2)
-base = "http://127.0.0.1:8088"
-s = requests.Session()
-
-def tok(html):
-    m = re.search(r"name=['\"]user_token['\"]\s+value=['\"]([0-9a-fA-F]+)['\"]", html)
-    return m.group(1) if m else None
-
-def login():
-    r = s.get(base + "/login.php", timeout=10)
-    return s.post(base + "/login.php",
-                  data={"username": "admin", "password": "password",
-                        "Login": "Login", "user_token": tok(r.text)}, timeout=10)
-
-try:
-    login()
-    # ① DB 생성/초기화
-    r = s.get(base + "/setup.php", timeout=10)
-    s.post(base + "/setup.php",
-           data={"create_db": "Create / Reset Database", "user_token": tok(r.text)}, timeout=90)
-    # ② ⚠️ DB 를 다시 만들면 users 테이블이 초기화되며 세션이 풀린다.
-    #    재로그인하지 않으면 아래 Security 설정이 조용히 무시되고 기본값 'impossible' 로 남아
-    #    Week 03 의 모든 실습(SQLi/XSS/업로드)이 통하지 않는다. 반드시 재로그인할 것.
-    login()
-    r = s.get(base + "/security.php", timeout=10)
-    r = s.post(base + "/security.php",
-               data={"security": "low", "seclev_submit": "Submit", "user_token": tok(r.text)},
-               timeout=10)
-    # ③ 진짜로 Low 가 됐는지 확인 (조용한 실패 방지)
-    m = re.search(r"Security level is currently: <em>(\w+)</em>", r.text)
-    level = m.group(1) if m else (s.cookies.get("security") or "?")
-    if level != "low":
-        print("     DVWA: Security 설정 실패 — 현재 등급 =", level)
-        sys.exit(1)
-    print("     DVWA: DB 생성 + Security=Low 설정 완료 (admin/password)")
-except Exception as e:
-    print("     DVWA 자동설정 실패(수동 1클릭 필요):", e)
-    sys.exit(1)
 PYDVWA
     then ok "DVWA 초기화 완료"
     else warn "DVWA 자동 초기화 실패 — 브라우저에서 admin/password 로그인 후 'Create/Reset Database' 1회 클릭하세요."
