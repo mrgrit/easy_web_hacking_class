@@ -1,25 +1,31 @@
 lab_id: ezweb-week04
-title: "AI 에이전트로 NeoBank 모의해킹 — 프롬프트 10단계"
+title: "AI 에이전트(Hermes)로 NeoBank 모의해킹 — 프롬프트 10단계 + 브라우저 교차 검증"
 course: ai-web-hacking
 week: 4
 description: |
-  Claude Code(AI 에이전트)가 가상 은행 NeoBank를 모의해킹한다. 학생은 아래 프롬프트를 순서대로
-  복사→붙여넣기만 한다. 에이전트가 curl로 요청을 보내고 결과를 한국어로 설명한다. 표적은 우리
-  실습용 NeoBank(:3001) 하나뿐이며, 학생은 일반 고객 alice로 시작해 은행이 숨긴 ₩1억 비밀 계좌와
-  전 회원 개인정보까지 들여다본 뒤, AI가 점검 보고서를 자동 작성한다. 모든 단계는 정해진 대로만
-  진행되도록 짜여 있다(변수 없음). answer_detail의 기술 PoC는 강사용 참고.
+  Hermes Agent(Week 02에서 설치한 그 비서)가 가상 은행 NeoBank를 모의해킹한다. 학생은 아래
+  프롬프트를 순서대로 복사→붙여넣기만 한다. 에이전트가 요청을 보내고 결과를 한국어로 설명한다.
+  표적은 우리 실습용 NeoBank(:3001) 하나뿐이며, 학생은 일반 고객 alice로 시작해 은행이 숨긴
+  ₩1억 비밀 계좌와 전 회원 개인정보까지 들여다본 뒤, AI가 점검 보고서를 자동 작성한다.
+
+  ⭐ **이번 주의 규칙: 에이전트가 "찾았습니다"라고 할 때마다 브라우저로 직접 확인한다.**
+  모든 단계에 `## 🖱️ 브라우저로 직접 확인` 절이 있다. 주소창 · 화면의 입력칸 · F12 콘솔
+  세 가지 도구만 쓴다. 재현되지 않으면 그건 에이전트의 환각이며, 그걸 잡아내는 것도 실력이다.
+  answer_detail의 기술 PoC는 강사용 참고.
 difficulty: medium
 duration_minutes: 360
 prerequisites:
   - "Week 03 통과(SQLi·XSS·인증 개념 체득), 보안 서약 유효"
-  - "공격자 VM에 Claude Code 설치 완료, 작업 폴더에서 claude 실행 가능"
-  - "희생자 VM에서 ./start.sh 로 NeoBank 기동, http://<victim-ip>:3001 접속 가능"
+  - "Week 02에서 Hermes Agent 설치 + DGX Spark 오픈 모델 연결 완료 (hermes 실행 가능)"
+  - "내 PC에서 ./start.sh victim 으로 NeoBank 기동, http://<victim-ip>:3001 접속 가능"
+  - "브라우저(크롬/엣지/파이어폭스) + F12 개발자도구"
 objectives:
   - "에이전트에게 점검 범위를 못 박고 정찰을 시작시킨다"
-  - "IDOR로 admin 비밀 계좌(₩1억)를 열람한다"
+  - "IDOR로 admin 비밀 계좌(₩1억)를 열람하고, 브라우저 주소창으로 직접 재현한다"
   - "SQLi 로그인 우회와 데이터 추출을 재현한다"
-  - "인증우회 헤더로 PII(주민번호·API키) 노출을 확인한다"
+  - "인증우회 헤더로 PII(주민번호·API키) 노출을 확인하고, F12 콘솔로 직접 재현한다"
   - "저장형 XSS를 심고, 권한상승을 재현한 뒤, 점검 보고서를 자동 생성한다"
+  - "에이전트의 보고를 브라우저로 교차 검증하는 습관을 갖는다"
 pass_threshold: 0.7
 steps:
 
@@ -29,32 +35,40 @@ steps:
       에이전트에게 표적과 허락 범위를 못 박고, 정찰을 시킨다.
       ## 개념 한 줄
       공격 전 표적의 기술·버전을 먼저 파악한다. 낡은 버전은 그 자체로 약점이다.
-      ## 💻 붙여넣을 프롬프트 (claude 안에서, <victim-ip> 는 실제 IP)
-      먼저 범위 설정:
+      ## 💻 붙여넣을 프롬프트 (hermes 안에서, <victim-ip> 는 실제 IP)
+      먼저 `cd ~/pentest && hermes` 로 에이전트를 켠 뒤, **범위 설정**부터:
       ```
       지금부터 너는 모의해킹 점검자야. 표적은 우리 실습용 NeoBank
       (http://<victim-ip>:3001) 하나뿐이고 절대 다른 사이트는 건드리지 마.
       curl 로 요청을 보내고, 찾은 것을 한국어로 쉽게 설명해줘.
+      그리고 매번 "브라우저에서는 어떻게 확인하면 되는지"도 한 줄로 알려줘.
       ```
-      이어서 정찰:
+      이어서 **정찰**:
       ```
       NeoBank 를 정찰해줘. /version 과 /health 를 확인해서 어떤 웹 프레임워크와
       버전을 쓰는지, 알려진 보안 문제가 있는 버전인지 알려줘.
       ```
+      ## 🖱️ 브라우저로 직접 확인
+      주소창에 `http://<victim-ip>:3001/version` 을 입력한다.
+      에이전트가 본 것과 **똑같은 JSON**이 화면에 그대로 뜬다.
+      → "curl 과 브라우저는 같은 요청을 보내는 두 방법"임을 눈으로 확인하는 첫 단계.
       ## ✅ 합격 기준
-      에이전트가 `Flask 1.0.2`(취약 버전), requests/PyJWT/Pillow 등 낡은 버전을 보고한다.
+      에이전트가 `Flask 1.0.2`(취약 버전), requests/PyJWT/Pillow 등 낡은 버전을 보고하고,
+      학생이 브라우저 주소창으로 같은 내용을 확인한다.
       ## 🧰 옵션 풀이
       - `/version` 응답에 프레임워크·의존성 버전이 그대로 노출된다(정보 노출, OWASP A06).
-    hint: "/version 을 확인하라고 시킨다"
+      - 에이전트가 느리면 브라우저로 먼저 봐도 된다. 오늘 모든 단계는 브라우저로도 된다.
+    hint: "/version 을 확인하라고 시키고, 주소창으로도 열어본다"
     category: recon
     points: 10
     answer: |
       프롬프트: "NeoBank 정찰 — /version /health 확인"
-      에이전트가 Flask 1.0.2 등 취약 버전 노출을 보고.
-    answer_detail: "GET /version → {framework: 'Flask 1.0.2 (CVE-2018-1000656 vulnerable)', deps:{requests 2.6.0, PyJWT 1.4.0, Pillow 8.0.0}}. 모두 알려진 CVE가 있는 낡은 버전. 정보 노출(A06)이며 후속 공격의 단서. 에이전트가 버전 노출 사실을 짚으면 통과."
+      브라우저: http://<victim-ip>:3001/version
+      → Flask 1.0.2 등 취약 버전 노출.
+    answer_detail: "GET /version → {framework: 'Flask 1.0.2 (CVE-2018-1000656 vulnerable)', deps:{requests 2.6.0, PyJWT 1.4.0, Pillow 8.0.0}}. 모두 알려진 CVE가 있는 낡은 버전. 정보 노출(A06)이며 후속 공격의 단서. 에이전트 보고 + 브라우저 확인이 모두 되면 통과."
     verify:
       type: manual
-      check: "에이전트가 Flask 1.0.2 등 취약/구버전 노출을 보고했다."
+      check: "에이전트가 Flask 1.0.2 등 취약/구버전 노출을 보고했고, 학생이 브라우저에서도 확인했다."
     target: victim
 
   - order: 2
@@ -69,19 +83,27 @@ steps:
       재현해줘. 로그인 후 /dashboard, /accounts/<내계좌id> 를 살펴보고, 어떤 기능
       (계좌 조회, 송금 /transfer, 검색 /search 등)이 있는지 목록으로 정리해줘.
       ```
+      ## 🖱️ 브라우저로 직접 확인
+      1. 브라우저로 `http://<victim-ip>:3001/login` 접속 → `alice@example.com / alice123` 로그인.
+      2. 대시보드에서 내 계좌를 클릭 → **주소창의 번호를 적어 둔다** (예: `/accounts/2`).
+         → 이 번호가 다음(프롬프트 4) IDOR 실습의 출발점이다.
+      3. 상단 메뉴에서 송금·검색 화면이 어디 있는지 눈으로 익힌다.
       ## ✅ 합격 기준
-      에이전트가 로그인에 성공하고, 주요 기능 목록(대시보드/계좌/송금/검색)을 정리한다.
+      에이전트가 로그인에 성공하고 기능 목록을 정리하며, 학생도 브라우저로 로그인해 **내 계좌
+      번호**를 확인한다.
       ## 🧰 옵션 풀이
       - 로그인은 `POST /login` (email/password 폼). 세션 쿠키로 이후 요청을 유지한다.
-    hint: "alice 로 로그인 후 기능 지도"
+      - F12 → Application → Cookies 에서 세션 쿠키가 생긴 것도 함께 보면 좋다(W03 복습).
+    hint: "alice 로 로그인 후 기능 지도 + 내 계좌 번호 확인"
     category: recon
     points: 8
     answer: |
-      alice@example.com / alice123 로그인 → /dashboard, /accounts, /transfer, /search 기능 확인.
-    answer_detail: "정상 흐름 매핑 단계. 에이전트가 alice 세션으로 기능 목록을 만들면 통과. 이 지도가 이후 IDOR/XSS 점검의 기준이 된다."
+      alice@example.com / alice123 로그인 → /dashboard, /accounts/<id>, /transfer, /search 기능 확인.
+      학생은 브라우저에서 자기 계좌 id(주소창 숫자)를 확인해 둔다.
+    answer_detail: "정상 흐름 매핑 단계. 에이전트가 alice 세션으로 기능 목록을 만들면 통과. 학생이 브라우저에서 자기 계좌 번호를 확인해 두면 다음 IDOR 단계가 자연스럽게 이어진다."
     verify:
       type: manual
-      check: "alice 로그인 성공 + 기능 목록 정리."
+      check: "alice 로그인 성공 + 기능 목록 정리 + 학생이 자기 계좌 번호를 말할 수 있다."
     target: victim
 
   - order: 3
@@ -95,19 +117,25 @@ steps:
       관리자 기본 자격증명이 남아 있는지 점검해줘. admin@neobank.local 에
       admin 같은 흔한 비밀번호로 로그인이 되는지 확인하고, 되면 어떤 권한이 보이는지 알려줘.
       ```
+      ## 🖱️ 브라우저로 직접 확인
+      1. **시크릿 창(새 사생활 보호 창)** 을 연다. (지금 alice 세션을 유지하기 위해)
+      2. `http://<victim-ip>:3001/login` → `admin@neobank.local` / `admin` 으로 로그인.
+      3. 관리자 화면이 열리는지 확인한 뒤 **시크릿 창을 닫는다.**
+      ⚠️ 다음 단계부터는 반드시 **alice 로 로그인한 원래 창**에서 진행한다.
+         (admin 으로 하면 "관리자니까 보이는 게 당연"해져 취약점의 의미가 사라진다)
       ## ✅ 합격 기준
-      에이전트가 `admin@neobank.local / admin` 로그인 성공을 보고한다.
+      에이전트가 `admin@neobank.local / admin` 로그인 성공을 보고하고, 학생도 시크릿 창에서 확인한다.
       ## 🧰 옵션 풀이
       - 기본 자격증명(A07)은 점수는 낮아도 영향이 크다. 관리자 권한을 통째로 내준다.
-    hint: "admin@neobank.local / admin"
+    hint: "admin@neobank.local / admin — 확인은 시크릿 창에서"
     category: auth
     points: 10
     answer: |
       admin@neobank.local / admin 로그인 성공(기본 관리자 계정 미변경).
-    answer_detail: "seed에 admin@neobank.local 비번이 'admin'으로 그대로 존재(V27). 에이전트가 관리자 로그인 성공을 보고하면 통과."
+    answer_detail: "seed에 admin@neobank.local 비번이 'admin'으로 그대로 존재(V27). 에이전트 보고 + 학생의 시크릿 창 확인이면 통과. 이후 실습은 alice 세션 유지가 필수임을 반드시 강조할 것."
     verify:
       type: manual
-      check: "admin/admin 관리자 로그인 성공 보고."
+      check: "admin/admin 관리자 로그인 성공 확인 후, alice 세션으로 복귀했다."
     target: victim
 
   - order: 4
@@ -122,21 +150,33 @@ steps:
       내 계좌가 아닌데도 잔액과 거래내역이 보이는지, 특히 잔액이 비정상적으로 큰
       계좌가 있는지 찾아서 알려줘.
       ```
+      ## 🖱️ 브라우저로 직접 확인 ★ (오늘 가장 중요)
+      **alice 로 로그인한 브라우저**에서 주소창의 숫자만 바꿔 가며 열어 본다:
+      ```
+      http://<victim-ip>:3001/accounts/1
+      http://<victim-ip>:3001/accounts/2
+      http://<victim-ip>:3001/accounts/3
+      http://<victim-ip>:3001/accounts/4
+      http://<victim-ip>:3001/accounts/5   ← 여기!
+      ```
+      계좌번호 `9999-9999-9999`, 잔액 **₩100,000,000** 인 admin 비밀 계좌가 화면에 뜬다.
+      **이 화면을 캡처한다 — 그게 점검 보고서의 '증거'다.**
       ## ✅ 합격 기준
-      에이전트가 /accounts/5 (또는 /accounts/1)에서 **₩100,000,000(1억)** 규모의 admin 계좌를
-      찾아 보고한다.
+      에이전트가 ₩100,000,000 규모의 admin 계좌를 찾아 보고하고, **학생이 브라우저에서 같은
+      화면을 직접 띄워 캡처한다.**
       ## 🧰 옵션 풀이
       - `/accounts/<id>` 는 소유 검증 없이 누구 계좌든 보여준다(V01). id=5 = admin 비밀 슬러시 계좌.
-      - 이게 "남의 돈이 보인다"의 핵심 — 입력(번호)을 너무 믿은 결과.
-    hint: "/accounts/5 = admin 슬러시 ₩1억"
+      - 스스로에게 물어보자: **"나는 alice인데 왜 관리자 계좌가 보이지?"** → 서버가 소유자 확인을 안 했다.
+    hint: "주소창의 계좌 번호를 1~5로 바꿔본다 → /accounts/5"
     category: idor
     points: 18
     answer: |
       /accounts/5 → account_number 9999-9999-9999, balance 100,000,000 (admin 비밀계좌) 노출.
-    answer_detail: "account_detail()은 current_user의 소유 여부를 확인하지 않아 임의 id 계좌를 노출(V01 IDOR). id=1은 admin 주계좌(₩999,999,999), id=5는 admin 슬러시(₩100,000,000). 에이전트가 비정상 고액 계좌를 찾아내면 통과 — 학생이 가장 '우와'하는 지점."
+      브라우저 주소창에서 숫자만 바꾸면 그대로 재현된다.
+    answer_detail: "account_detail()은 current_user의 소유 여부를 확인하지 않아 임의 id 계좌를 노출(V01 IDOR). id=1은 admin 주계좌(₩999,999,999), id=5는 admin 슬러시(₩100,000,000). 에이전트 보고 + 학생의 브라우저 캡처가 모두 있으면 통과 — 학생이 가장 '우와'하는 지점이며, 증거 확보(캡처) 개념을 함께 가르친다."
     verify:
       type: manual
-      check: "남의 계좌(₩1억대 admin 계좌)를 열람·보고했다."
+      check: "브라우저에서 /accounts/5 의 ₩1억 계좌 화면을 띄우고 캡처했다."
     target: victim
 
   - order: 5
@@ -151,20 +191,31 @@ steps:
       ' OR 1=1-- 같은 페이로드를 넣어 비밀번호 없이 로그인되는지 확인하고,
       어떤 계정으로 로그인되는지 알려줘.
       ```
+      ## 🖱️ 브라우저로 직접 확인
+      1. 로그아웃한 뒤 `http://<victim-ip>:3001/login` 으로 간다.
+      2. **이메일 칸**에 그대로 붙여넣는다:
+         ```
+         ' OR 1=1--
+         ```
+      3. **비밀번호 칸**엔 아무 글자나(예: `x`) 넣고 로그인을 누른다.
+      4. 비밀번호를 한 번도 맞히지 않았는데 로그인된다.
+      ⚠️ 확인 후 로그아웃하고 **다시 alice 로 로그인**해 둔다(다음 단계 준비).
       ## ✅ 합격 기준
-      에이전트가 `' OR 1=1--` 로 **비번 없이 로그인 성공**(첫 사용자=admin)을 보고한다.
+      에이전트가 비번 없이 로그인 성공을 보고하고, 학생이 브라우저 폼에서 같은 결과를 재현한다.
       ## 🧰 옵션 풀이
       - 서버 쿼리: `SELECT * FROM users WHERE email='<입력>' AND password='<입력>'`.
       - `' OR 1=1--` 는 조건을 항상 참으로 만들고 뒤를 주석 처리해 첫 행(admin)으로 로그인시킨다.
-    hint: "email 칸에 ' OR 1=1--"
+      - 페이로드를 복사할 때 따옴표가 다른 모양(’)으로 바뀌지 않게 주의.
+    hint: "로그인 화면 이메일 칸에 ' OR 1=1-- 를 그대로 입력"
     category: sqli
     points: 16
     answer: |
       email=' OR 1=1-- (password 아무거나) → 첫 사용자 admin 으로 로그인 성공.
-    answer_detail: "login()이 입력을 문자열 결합으로 쿼리에 넣어 SQLi 발생(V03). ' OR 1=1-- 는 WHERE를 참으로 만들고 비번 조건을 주석 처리 → 첫 행(id=1 admin)으로 세션 생성. 에이전트가 인증 우회 성공을 보고하면 통과."
+      브라우저 로그인 폼에서 그대로 재현된다.
+    answer_detail: "login()이 입력을 문자열 결합으로 쿼리에 넣어 SQLi 발생(V03). ' OR 1=1-- 는 WHERE를 참으로 만들고 비번 조건을 주석 처리 → 첫 행(id=1 admin)으로 세션 생성. 에이전트 보고 + 브라우저 재현이면 통과."
     verify:
       type: manual
-      check: "SQLi 로 비밀번호 없이 로그인 성공 보고."
+      check: "브라우저 로그인 폼에 ' OR 1=1-- 를 넣어 비밀번호 없이 로그인되는 것을 확인했다."
     target: victim
 
   - order: 6
@@ -177,23 +228,32 @@ steps:
       ```
       /search?q= 기능에 SQL 인젝션이 있는지 점검하고, 가능하면 users 테이블의
       email 과 password 를 추출해줘. UNION SELECT 의 컬럼 개수는 네가 맞춰서 시도해줘.
+      성공한 주소(URL)를 내가 브라우저에 그대로 붙여넣을 수 있게 알려줘.
       ```
+      ## 🖱️ 브라우저로 직접 확인
+      에이전트가 알려준 **성공 URL 을 브라우저 주소창에 그대로 붙여넣는다.** 예:
+      ```
+      http://<victim-ip>:3001/search?q=' UNION SELECT 1,email,password,4,5,6,7 FROM users--
+      ```
+      검색 결과 화면에 회원들의 이메일과 **평문 비밀번호**가 줄줄이 뜬다.
+      (주소창에서 공백이 `%20` 으로 바뀌어 보여도 정상이다)
       ## ✅ 합격 기준
-      에이전트가 회원들의 이메일과 비밀번호(평문)를 추출해 목록으로 보고한다.
+      에이전트가 회원 이메일·비밀번호를 추출해 보고하고, 학생이 그 URL 을 브라우저에서 재현한다.
       ## 🧰 옵션 풀이
       - 서버 쿼리: `SELECT * FROM transfers WHERE memo LIKE '%<q>%'` (transfers = 7개 컬럼).
       - 강사 참고 페이로드: `' UNION SELECT 1,email,password,4,5,6,7 FROM users-- `
       - 컬럼 수 맞추기는 에이전트가 스스로 시행착오로 해결한다(AI가 운전).
-    hint: "/search 에 UNION SELECT, 컬럼 수는 AI가 맞춤"
+      - 한 번에 안 되면: "왜 안 됐는지 보고 다른 컬럼 수로 다시 시도해줘."
+    hint: "/search 에 UNION SELECT, 컬럼 수는 AI가 맞춤 → 성공 URL을 주소창에"
     category: sqli
     points: 16
     answer: |
       /search?q=' UNION SELECT 1,email,password,4,5,6,7 FROM users--
-      → alice123, bobpassword, qwerty, admin 등 평문 비번 노출.
-    answer_detail: "search()의 LIKE 절에 입력을 직접 합쳐 UNION 기반 SQLi 가능(V03b). transfers 7컬럼에 맞춰 email/password를 노출 위치에 배치. 비밀번호가 평문 저장(의도적)이라 그대로 보인다. 에이전트가 회원 자격증명을 추출하면 통과."
+      → alice123, bobpassword, qwerty, admin 등 평문 비번 노출. 브라우저 주소창에서 그대로 재현.
+    answer_detail: "search()의 LIKE 절에 입력을 직접 합쳐 UNION 기반 SQLi 가능(V03b). transfers 7컬럼에 맞춰 email/password를 노출 위치에 배치. 비밀번호가 평문 저장(의도적)이라 그대로 보인다. 에이전트 추출 + 브라우저 재현이면 통과."
     verify:
       type: manual
-      check: "회원 이메일·비밀번호 목록을 추출·보고했다."
+      check: "브라우저 주소창에 성공 URL을 넣어 회원 비밀번호 목록을 화면에서 확인했다."
     target: victim
 
   - order: 7
@@ -208,21 +268,37 @@ steps:
       X-Internal: 1 헤더를 붙이면 통과되는지 확인하고, 응답에 어떤 개인정보
       (주민번호 ssn, 전화, API 키, 비밀질문 답)가 들어있는지 알려줘.
       ```
+      ## 🖱️ 브라우저로 직접 확인 (오늘 유일하게 F12가 필요한 곳)
+      **① 먼저 막히는 걸 본다.** 주소창에 `http://<victim-ip>:3001/api/admin/users`
+         → `{"error":"auth required"}` 로 거절당한다.
+      **② 이제 메모(헤더) 한 줄을 붙여 다시 보낸다.** `F12` → **Console(콘솔)** 탭에 붙여넣고 Enter:
+      ```javascript
+      fetch('/api/admin/users', { headers: { 'X-Internal': '1' } })
+        .then(r => r.json())
+        .then(d => console.log(d));
+      ```
+      결과가 콘솔에 펼쳐진다. `▶` 를 눌러 항목을 열면 `ssn`, `api_key`, `secret_answer` 가 보인다.
+      **(파이어폭스 대안)** F12 → 네트워크 탭 → 아무 요청 우클릭 → **편집 후 다시 보내기** →
+      주소를 `/api/admin/users` 로 바꾸고 헤더에 `X-Internal: 1` 추가 → 보내기.
       ## ✅ 합격 기준
-      에이전트가 `X-Internal: 1` 헤더로 인증 우회 후 **ssn·api_key·secret_answer** 가 평문으로
-      노출됨을 보고한다.
+      에이전트가 헤더 우회 + PII 노출을 보고하고, 학생이 **①막힘 → ②헤더 붙여 열림** 대비를
+      브라우저에서 직접 확인한다.
       ## 🧰 옵션 풀이
       - 서버는 로그인 안 됐어도 `X-Internal: 1` 이면 통과시킨다(V07). 응답은 주민번호·API키까지 평문(V19).
       - 헤더는 누구나 위조할 수 있으므로 '신뢰 경계'로 쓰면 안 된다는 교훈.
-    hint: "헤더 X-Internal: 1"
+      - ⚠️ 콘솔 경고가 떠도 지금은 우리 표적에 교재 코드를 넣는 것이라 안전하다.
+        하지만 **남이 시켜서 콘솔에 코드를 붙여 넣는 일은 평생 하지 말 것**(실제 사기 수법).
+    hint: "주소창은 막힘 → F12 콘솔에서 fetch 로 X-Internal:1 헤더 추가"
     category: auth
     points: 16
     answer: |
-      curl -H 'X-Internal: 1' /api/admin/users → 전 회원 ssn/phone/api_key/secret_answer 평문 덤프.
-    answer_detail: "admin_users()는 u가 None이어도 X-Internal:1이면 통과(V07 인증우회). 응답에 ssn, api_key, secret_answer 등 PII를 평문으로 포함(V19). 에이전트가 헤더 우회 + PII 노출을 함께 보고하면 통과. 가장 임팩트 큰 발견."
+      브라우저 주소창: /api/admin/users → 401 auth required
+      F12 콘솔: fetch('/api/admin/users',{headers:{'X-Internal':'1'}}).then(r=>r.json()).then(console.log)
+      → 전 회원 ssn/phone/api_key/secret_answer 평문 덤프.
+    answer_detail: "admin_users()는 u가 None이어도 X-Internal:1이면 통과(V07 인증우회). 응답에 ssn, api_key, secret_answer 등 PII를 평문으로 포함(V19). 학생이 '막힘 → 헤더 하나로 열림'의 대비를 직접 보는 것이 핵심. 가장 임팩트 큰 발견."
     verify:
       type: manual
-      check: "X-Internal:1 우회로 PII(주민번호/API키) 평문 노출 보고."
+      check: "주소창에서 401을 보고, F12 콘솔에서 X-Internal:1 로 PII가 노출되는 것을 확인했다."
     target: victim
 
   - order: 8
@@ -237,20 +313,31 @@ steps:
       memo 에 <script>alert(document.cookie)</script> 를 넣어 송금한 뒤,
       해당 계좌 상세 페이지(/accounts/<id>)에서 스크립트가 실행되는지 확인해줘.
       ```
+      ## 🖱️ 브라우저로 직접 확인 ★ (제일 극적)
+      1. alice 로 로그인한 브라우저에서 **송금(`/transfer`)** 화면으로 간다.
+      2. 받는 계좌·금액은 아무거나 넣고, **메모 칸**에 그대로 붙여넣는다:
+         ```
+         <script>alert(document.cookie)</script>
+         ```
+      3. 송금 버튼을 누른다.
+      4. **내 계좌 상세 페이지(`/accounts/<내 계좌 id>`)를 연다.**
+         → **경고창이 뜨면** 내가 심은 코드가 브라우저에서 실행된 것이다.
+      5. 실제 공격이라면? 이 페이지를 여는 **다른 고객**의 브라우저에서 터진다.
       ## ✅ 합격 기준
-      에이전트가 memo의 스크립트가 계좌 상세 페이지에서 실행(또는 필터 없이 그대로 삽입)됨을 보고한다.
+      계좌 상세 페이지에서 경고창이 뜨거나, 페이지 소스에 `<script>` 가 필터 없이 박혀 있다.
       ## 🧰 옵션 풀이
       - memo 는 sanitize 없이 저장·출력(V10). 계좌 상세에서 스크립트 태그가 그대로 렌더된다.
-      - 실제론 이 스크립트로 다른 고객의 세션 쿠키를 탈취할 수 있다(원리 이해).
-    hint: "memo=<script>alert(document.cookie)</script>"
+      - 실제론 `alert` 대신 "쿠키를 공격자 서버로 전송"하는 코드를 심는다 → 세션 탈취.
+      - 경고창이 안 뜨면 F12 → Elements 에서 `<script>` 가 그대로 들어갔는지 확인한다.
+    hint: "송금 화면의 메모 칸에 <script>alert(document.cookie)</script> → 계좌 상세 열기"
     category: xss
     points: 12
     answer: |
-      /transfer memo=<script>alert(document.cookie)</script> → /accounts/<id> 에서 발현.
-    answer_detail: "transfer()가 memo를 필터 없이 저장하고 account_detail이 그대로 출력해 저장형 XSS(V10). 에이전트가 스크립트가 계좌 페이지에 무필터로 삽입/실행됨을 확인하면 통과."
+      /transfer memo=<script>alert(document.cookie)</script> → /accounts/<id> 에서 발현(경고창).
+    answer_detail: "transfer()가 memo를 필터 없이 저장하고 account_detail이 그대로 출력해 저장형 XSS(V10). 학생이 브라우저에서 직접 심고 직접 터뜨리는 것이 이 단계의 핵심 — '내 입력이 남의 브라우저에서 실행된다'를 몸으로 이해한다."
     verify:
       type: manual
-      check: "memo의 스크립트가 계좌 페이지에서 무필터 삽입/실행됨을 보고."
+      check: "계좌 상세 페이지에서 경고창이 뜨거나, 소스에 <script>가 무필터 삽입된 것을 확인했다."
     target: victim
 
   - order: 9
@@ -265,20 +352,36 @@ steps:
       내 프로필 업데이트 요청에 "role":"admin" 을 같이 넣어보고, 권한이 실제로
       admin 으로 바뀌는지(/api/me 등으로) 확인해줘.
       ```
+      ## 🖱️ 브라우저로 직접 확인 (F12 콘솔)
+      alice 로 로그인한 상태에서 `F12` → **Console** 에 붙여넣고 Enter:
+      ```javascript
+      fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ full_name: '앨리스', role: 'admin' })
+      }).then(r => r.json()).then(console.log);
+      ```
+      그다음 내 역할을 확인:
+      ```javascript
+      fetch('/api/me').then(r => r.json()).then(console.log);
+      ```
+      → `role` 이 `admin` 으로 바뀌어 있으면 성공.
       ## ✅ 합격 기준
-      에이전트가 role=admin 주입으로 본인 권한이 admin 으로 상승함을 보고한다.
+      에이전트가 권한 상승을 보고하고, 학생이 F12 콘솔에서 `/api/me` 의 role 변화를 확인한다.
       ## 🧰 옵션 풀이
       - `/api/profile/update` 가 role/api_key 를 화이트리스트 없이 받음(V20 Mass assignment).
       - 방어책: 받을 필드를 명시적으로 제한(allow-list).
-    hint: '{"role":"admin"} 을 프로필 업데이트에 주입'
+      - 입사지원서 '직급' 칸에 "사장"이라 적었는데 인사팀이 그대로 등록해 버린 상황과 같다.
+    hint: 'F12 콘솔에서 fetch 로 {"role":"admin"} 을 프로필 업데이트에 주입'
     category: privesc
     points: 12
     answer: |
       POST /api/profile/update {"role":"admin"} → 본인 role 이 admin 으로 상승.
-    answer_detail: "profile/update가 role·api_key까지 그대로 반영(V20). 에이전트가 role=admin 주입 후 권한 상승을 확인하면 통과."
+      F12 콘솔의 fetch 두 줄로 브라우저에서도 그대로 재현된다.
+    answer_detail: "profile/update가 role·api_key까지 그대로 반영(V20). 에이전트 보고 + 학생의 콘솔 확인(/api/me 의 role 변화)이면 통과."
     verify:
       type: manual
-      check: "role=admin 주입으로 권한 상승 보고."
+      check: "F12 콘솔에서 role=admin 주입 후 /api/me 로 권한 상승을 확인했다."
     target: victim
 
   - order: 10
@@ -292,19 +395,28 @@ steps:
       지금까지 NeoBank 에서 찾은 취약점들을 점검 보고서로 정리해줘.
       각 항목마다 [제목 / OWASP 분류 / 위치(엔드포인트) / 재현 방법 / 영향 / 권장 대책]을
       표와 함께 한국어 markdown 으로 써서 report.md 파일로 저장해줘.
+      재현 방법은 '브라우저로 따라할 수 있게' 적어줘.
       ```
+      ## 🖱️ 브라우저로 직접 확인 (교차 검증)
+      1. `cat report.md` 로 보고서를 읽는다.
+      2. 보고서에 적힌 **재현 방법 중 하나를 골라 브라우저로 그대로 따라 해 본다.**
+      3. 재현되면 ✓, **재현이 안 되면 그건 에이전트의 환각이다** — 찾아내면 칭찬받을 일이다.
+         에이전트에게 이렇게 물어보자:
+         "내가 브라우저로 해봤는데 안 되던데, 실제 응답을 다시 보여줘."
       ## ✅ 합격 기준
-      `report.md` 파일이 생성되고, 오늘 찾은 7개 이상 취약점이 OWASP 분류·대책과 함께 정리된다.
+      `report.md` 파일이 생성되고, 오늘 찾은 7개 이상 취약점이 OWASP 분류·대책과 함께 정리되며,
+      학생이 재현 방법 1건 이상을 브라우저로 검증한다.
       ## 🧰 옵션 풀이
       - 보고서엔 정찰(A06), IDOR(A01), SQLi(A03), 인증우회/PII(A07/A02), XSS(A03), 권한상승(A01)이 담긴다.
       - 발표: 가장 위험하다고 생각하는 취약점 1개와 그 이유를 말한다.
-    hint: "report.md 로 저장하라고 시킨다"
+      - 프롬프트 4에서 캡처한 ₩1억 화면을 증거로 함께 붙이면 진짜 보고서가 된다.
+    hint: "report.md 로 저장하라고 시키고, 재현 방법 하나를 브라우저로 검증한다"
     category: report
     points: 20
     answer: |
-      (claude 안) "찾은 취약점을 OWASP 분류/재현/영향/대책 표로 report.md 에 저장"
-      → report.md 생성.
-    answer_detail: "에이전트가 발견 항목을 구조화된 보고서로 자동 작성한다. report.md가 생성되고 다수 취약점이 OWASP 분류·대책과 함께 정리되면 통과. 학생은 보고서를 읽고 가장 위험한 1건을 발표한다(공격→방어로 시선 전환)."
+      (hermes 안) "찾은 취약점을 OWASP 분류/재현/영향/대책 표로 report.md 에 저장"
+      → report.md 생성 → 재현 방법 1건을 브라우저로 검증.
+    answer_detail: "에이전트가 발견 항목을 구조화된 보고서로 자동 작성한다. report.md가 생성되고 다수 취약점이 OWASP 분류·대책과 함께 정리되면 통과. 교차 검증 단계에서 환각을 잡아내면 가산점 — '보고서의 모든 항목은 재현 가능해야 한다'는 실무 원칙을 가르치는 자리다."
     verify:
       type: file_exists
       expect: "report.md"

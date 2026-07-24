@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}담벼락 · AI 웹 해킹 특강{% endblock %}
+{% block content %}
+
+<div class="section">
+  <h2>📌 우리 반 담벼락</h2>
+  <p class="muted" style="margin-top:-6px">
+    배운 것·막힌 것·발견한 것을 메모지로 붙여 두는 곳입니다. 질문도, 자랑도, 실패담도 환영!
+  </p>
+
+  {% if me %}
+  <div class="info" style="margin-bottom:18px">
+    <form method="POST" action="/board/new" class="form">
+      <div class="noteform">
+        <input name="title" placeholder="제목 (선택) — 예: 5번 문제 쿠키 어떻게 바꿔요?" maxlength="80">
+        <textarea name="body" placeholder="내용을 적어주세요…" required maxlength="2000"></textarea>
+        <input name="link" placeholder="관련 링크 (선택) — 예: /lab/05" maxlength="300">
+        <div class="colorrow">
+          <span class="muted">색:</span>
+          {% for c in colors %}
+          <label class="swatch {{ c }}">
+            <input type="radio" name="color" value="{{ c }}" {% if loop.first %}checked{% endif %}>
+            <span></span>
+          </label>
+          {% endfor %}
+          <button class="btn" type="submit">📌 붙이기</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  {% else %}
+  <div class="info warn" style="margin-bottom:18px">
+    메모를 붙이려면 <a href="/login">로그인</a>이 필요합니다. (읽기는 누구나 가능)
+  </div>
+  {% endif %}
+
+  {% if not notes %}
+    <div class="info">아직 메모가 없습니다. 첫 메모를 붙여 보세요!</div>
+  {% endif %}
+
+  <div class="wall">
+    {% for n in notes %}
+    <div class="note {{ n.color }}">
+      {% if n.title %}<h4>{{ n.title }}</h4>{% endif %}
+      <p>{{ n.body }}</p>
+      {% if n.link %}<p class="nlink"><a href="{{ n.link }}">🔗 {{ n.link }}</a></p>{% endif %}
+      <div class="nmeta">
+        <span>✍️ {{ n.author }}</span>
+        <span>{{ n.created_at[:16] }}</span>
+      </div>
+      <div class="nact">
+        <form method="POST" action="/board/{{ n.id }}/like" style="display:inline">
+          <button class="chip {% if n.id in liked %}on{% endif %}" type="submit"
+                  {% if not me %}disabled title="로그인이 필요합니다"{% endif %}>👍 {{ n.likes }}</button>
+        </form>
+        <a class="chip" href="/board/{{ n.id }}">💬 {{ n.cmts }}</a>
+        {% if me and (me.username == n.author or is_admin) %}
+        <form method="POST" action="/board/{{ n.id }}/delete" style="display:inline"
+              onsubmit="return confirm('이 메모를 지울까요?')">
+          <button class="chip del" type="submit">🗑</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

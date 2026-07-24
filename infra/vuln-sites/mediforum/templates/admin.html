@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="border-color:#dc2626;">
+  <h2 style="margin-top:0;">🛠️ 관리자 콘솔</h2>
+  <p class="meta">
+    MediForum 운영자 전용 화면입니다. 회원 관리 · 쪽지 감사 · 신고 검토 · 기밀 금고를 제공합니다.
+    {% if me %}현재 접속: <b>{{me.display_name}} ({{me.role}})</b>{% else %}<b>(로그인 정보 없음)</b>{% endif %}
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0;">메뉴</h3>
+  <p>
+    <button class="btn" onclick="load('users')">👥 회원 관리</button>
+    <button class="btn" onclick="load('dms')">✉️ 쪽지 감사</button>
+    <button class="btn" onclick="load('reports')">🚨 신고 목록</button>
+    <a class="btn btn-sec" href="/admin/review">🤖 신고 검토(관리자 봇)</a>
+    <a class="btn btn-red" href="/admin/secret">🔒 기밀 금고</a>
+  </p>
+  <p class="meta">각 버튼은 관리자 API 를 호출해 표를 그립니다. (F12 → Network 로 어떤 주소를 부르는지 볼 수 있습니다)</p>
+</div>
+
+<div class="card">
+  <h3 id="title" style="margin-top:0;">데이터</h3>
+  <div id="wrap"><p class="meta">위 메뉴에서 항목을 고르세요.</p></div>
+</div>
+
+<script>
+const EP = {
+  users:   {url:'/api/admin/users',   title:'👥 회원 관리 (전체 회원 정보)'},
+  dms:     {url:'/api/admin/dms',     title:'✉️ 쪽지 감사 (회원 간 주고받은 쪽지 전체)'},
+  reports: {url:'/api/admin/reports', title:'🚨 신고 목록 (검토 대기)'}
+};
+async function load(k){
+  const {url,title} = EP[k];
+  document.getElementById('title').textContent = title;
+  const rows = await (await fetch(url)).json();
+  if (!rows.length){ document.getElementById('wrap').innerHTML='<p class="meta">항목 없음</p>'; return; }
+  const cols = Object.keys(rows[0]);
+  let h = '<table><tr>' + cols.map(c=>'<th>'+c+'</th>').join('') + '</tr>';
+  for (const r of rows){
+    h += '<tr>' + cols.map(c=>{
+      let v = r[c]; if (v === null || v === undefined) v = '';
+      // 화면에는 글자로만 보여 준다(관리자 화면에서까지 스크립트가 돌면 곤란하니까)
+      v = String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return '<td>' + v + '</td>';
+    }).join('') + '</tr>';
+  }
+  document.getElementById('wrap').innerHTML = h + '</table>';
+}
+</script>
+{% endblock %}

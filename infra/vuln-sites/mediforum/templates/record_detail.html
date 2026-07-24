@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+{% if not r %}
+<div class="card">
+  <h2 style="margin-top:0;">기록 #{{rid}}</h2>
+  <p class="err">해당 번호의 진료기록이 없습니다.</p>
+  <a class="btn btn-sec" href="/records">목록으로</a>
+</div>
+{% else %}
+<div class="card">
+  <div><span class="tag">진료기록</span> <span class="tag">#{{r.id}}</span></div>
+  <h2 style="margin-top:8px;">{{r.diagnosis}}</h2>
+  <div class="meta">환자 {{r.patient_name or '—'}} ({{r.patient_ssn or '—'}}) · 담당의 {{r.doctor_name or '—'}} · {{r.visit_date}}</div>
+  <hr style="border-color:var(--border);margin:14px 0;">
+  <table>
+    <tr><th style="width:120px;">진단</th><td>{{r.diagnosis}}</td></tr>
+    <tr><th>처방 / 소견</th><td>{{r.prescription}}</td></tr>
+    <tr><th>진료일</th><td>{{r.visit_date}}</td></tr>
+  </table>
+</div>
+<div class="card">
+  <a class="btn btn-sec" href="/records">← 목록</a>
+  {% if r.id > 1 %}<a class="btn btn-sec" href="/records/{{r.id - 1}}">◀ 이전 기록</a>{% endif %}
+  <a class="btn btn-sec" href="/records/{{r.id + 1}}">다음 기록 ▶</a>
+</div>
+{% endif %}
+{% endblock %}

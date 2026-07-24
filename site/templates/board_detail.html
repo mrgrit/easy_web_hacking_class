@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}메모 · 담벼락{% endblock %}
+{% block content %}
+<div class="section" style="max-width:680px;margin:0 auto">
+  <div class="docnav"><a class="btn ghost" href="/board">← 담벼락</a></div>
+
+  <div class="note {{ n.color }}" style="width:100%;max-width:none">
+    {% if n.title %}<h4>{{ n.title }}</h4>{% endif %}
+    <p>{{ n.body }}</p>
+    {% if n.link %}<p class="nlink"><a href="{{ n.link }}">🔗 {{ n.link }}</a></p>{% endif %}
+    <div class="nmeta"><span>✍️ {{ n.author }}</span><span>{{ n.created_at[:16] }}</span></div>
+  </div>
+
+  <h3>💬 댓글 {{ cmts|length }}</h3>
+  <div class="info">
+    {% for c in cmts %}
+      <div class="cmt"><b>{{ c.author }}</b> <span class="muted">{{ c.created_at[:16] }}</span>
+        <div>{{ c.body }}</div></div>
+    {% else %}
+      <p class="muted">아직 댓글이 없습니다.</p>
+    {% endfor %}
+  </div>
+
+  {% if me %}
+  <div class="info" style="margin-top:12px">
+    <form method="POST" action="/board/{{ n.id }}/comment" class="form">
+      <textarea name="body" placeholder="댓글을 적어주세요…" required maxlength="500"></textarea>
+      <button class="btn" type="submit">댓글 달기</button>
+    </form>
+  </div>
+  {% else %}
+  <div class="info warn" style="margin-top:12px">댓글을 쓰려면 <a href="/login">로그인</a>하세요.</div>
+  {% endif %}
+</div>
+{% endblock %}

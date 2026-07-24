@@ -6,14 +6,24 @@
   <p>코드 한 줄 몰라도, AI 에이전트와 함께라면 진짜 해커가 하는 일을 직접 해볼 수 있다.</p>
   <div class="badges">
     <span class="badge">🎯 비전공 고등학생 대상</span>
-    <span class="badge">🤖 Claude Code와 함께</span>
-    <span class="badge">🧪 5섹터 · 직접 체험</span>
+    <span class="badge">🤖 Hermes Agent + 오픈 모델</span>
+    <span class="badge">🖱️ 브라우저만으로 실습</span>
+    <span class="badge">🧪 5주차 + 특별 세션 3주</span>
     <span class="badge">🏁 mini-CTF 대결</span>
   </div>
+  {% if not me %}
+  <p style="margin-top:16px">
+    <a class="btn" href="/register">회원가입하고 시작하기</a>
+    <a class="btn ghost" href="/login">로그인</a>
+  </p>
+  <p class="muted" style="margin-top:6px;font-size:13px">
+    가입하면 CTF 플랫폼 계정도 같이 만들어집니다(연동 설정 시).
+  </p>
+  {% endif %}
 </div>
 
 <div class="section">
-  <h2>📚 커리큘럼 (5개 섹터)</h2>
+  <h2>📚 본 과정 (5주차)</h2>
   <div class="grid">
     {% for wk, info in weeks.items() %}
     <div class="card">
@@ -30,19 +40,49 @@
 </div>
 
 <div class="section">
+  <h2>🧠 특별 세션 — AI 서비스 모의해킹 (3주)</h2>
+  <div class="info" style="margin-bottom:14px">
+    챗봇·AI 비서 <b>그 자체</b>를 뚫어 본다. 프롬프트 인젝션·RAG 오염·과도한 도구 권한 같은
+    AI 고유의 취약점을 다루며, <b>진짜 AI 모델 없이도(mock 모드)</b> 전부 실습된다.
+  </div>
+  <div class="grid">
+    {% for sid, info in specials.items() %}
+    <div class="card">
+      <span class="wk">특별 세션 {{ sid[-1] }} · {{ info.hours }}</span>
+      <h3>{{ info.emoji }} {{ info.title }}</h3>
+      <p class="hook">{{ info.hook }}</p>
+      <div class="links">
+        <a class="btn" href="/lecture/{{ sid }}">교과서 열기</a>
+        <a class="btn ghost" href="/lab/{{ sid }}">실습 보기</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="section">
   <h2>🖥️ 실습 환경 빠른 시작</h2>
   <div class="info">
-    <p>희생자 사이트(표적)를 한 번에 띄웁니다. (희생자 VM에서)</p>
+    <p><b>강사 서버(중앙 1대)</b> — 강좌 사이트 · CTF · AI 도우미</p>
     <pre><code>cd infra
-./start.sh        # DVWA · NeoBank · MediForum · CTFd · AI도우미 기동</code></pre>
+./start.sh hub</code></pre>
+    <p><b>학생 PC(각자)</b> — 표적(희생자) 사이트들</p>
+    <pre><code>cd infra
+./start.sh victim</code></pre>
     <table>
-      <tr><th>사이트</th><th>주소</th><th>쓰는 곳</th></tr>
-      <tr><td>DVWA</td><td><code>:8088</code></td><td>Week 03 웹 해킹</td></tr>
-      <tr><td>NeoBank</td><td><code>:3001</code></td><td>Week 04 AI 모의해킹</td></tr>
-      <tr><td>MediForum</td><td><code>:3003</code></td><td>Week 05 CTF 표적</td></tr>
-      <tr><td>CTFd</td><td><code>:8000</code></td><td>Week 05 CTF 플랫폼</td></tr>
-      <tr><td>AI 도우미</td><td><code>:8001</code></td><td>Week 05 힌트 챗봇</td></tr>
+      <tr><th>사이트</th><th>주소</th><th>어디에</th><th>쓰는 곳</th></tr>
+      <tr><td>강좌 사이트</td><td><code>:8090</code></td><td>강사 서버</td><td>전 주차 포털</td></tr>
+      <tr><td>CTFd</td><td><code>:8000</code></td><td>강사 서버</td><td>Week 05 CTF 플랫폼</td></tr>
+      <tr><td>AI 도우미</td><td><code>:8001</code></td><td>강사 서버</td><td>Week 05 힌트 챗봇</td></tr>
+      <tr><td>DVWA</td><td><code>:8088</code></td><td>학생 PC</td><td>Week 03 웹 해킹</td></tr>
+      <tr><td>NeoBank</td><td><code>:3001</code></td><td>학생 PC</td><td>Week 04 AI 모의해킹</td></tr>
+      <tr><td>MediForum</td><td><code>:3003</code></td><td>학생 PC</td><td>Week 05 CTF 표적</td></tr>
+      <tr><td>AICompanion</td><td><code>:3005</code></td><td>학생 PC</td><td>특별 세션 표적</td></tr>
     </table>
+    <p class="muted" style="font-size:13px;margin-bottom:0">
+      표적을 학생 PC 에 두는 이유: 한 대를 함께 쓰면 친구가 비밀번호를 바꾸거나 스크립트를 심는
+      순간 내 실습이 망가지기 때문입니다. 자세한 배치는 <code>docs/DEPLOYMENT.md</code>.
+    </p>
   </div>
 </div>
 
@@ -51,7 +91,8 @@
   <div class="info warn">
     이 특강의 모든 표적은 <b>교육용으로 일부러 취약하게</b> 만든 것입니다. 반드시 본인 소유 또는
     허락된 폐쇄망 실습 환경에서만 사용하세요. 실제 타인의 웹사이트를 허락 없이 공격하는 것은
-    <b>범죄</b>입니다(정보통신망법). 자세한 내용은 Week 01 교과서와 해킹 서약서를 참고하세요.
+    <b>범죄</b>입니다(정보통신망법). <b>AI 에이전트에게 대신 시키는 것도 마찬가지</b>로 시킨
+    사람의 책임입니다. 자세한 내용은 Week 01 교과서와 보안 서약서를 참고하세요.
   </div>
 </div>
 

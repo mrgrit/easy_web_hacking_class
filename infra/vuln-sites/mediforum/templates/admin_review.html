@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2 style="margin-top:0;">🤖 신고 검토 — 관리자 봇</h2>
+  <p class="meta">
+    신고가 접수되면 <b>관리자 봇</b>이 해당 글을 자기 브라우저로 열어 확인합니다.
+    아래는 봇이 방금 순찰하며 열어 본 글 목록입니다.
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0;">검토 대기열</h3>
+  <table>
+    <tr><th>신고#</th><th>글</th><th>사유</th><th>접수</th></tr>
+    {% for q in queue %}
+    <tr>
+      <td>{{q.report_id or '—'}}</td>
+      <td><a href="/posts/{{q.post_id}}">{{q.title}}</a></td>
+      <td>{{q.reason}}</td>
+      <td class="meta">{{q.reported_at}}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+{% if flag %}
+<div class="card" style="border-color:#dc2626;">
+  <h3 style="margin-top:0;">⚠️ 봇 브라우저에서 스크립트가 실행되었습니다!</h3>
+  <p>
+    검토 대상 본문에 실행 가능한 코드가 섞여 있었고, 봇이 글을 여는 순간 그 코드가
+    <b>봇의 브라우저 권한으로</b> 동작했습니다. 봇이 들고 있던 관리자 인수인계 코드가 그대로 노출됩니다.
+  </p>
+  <div class="card" style="background:#06140f;">
+    <div class="meta">FLAG (관리자 봇의 세션에서 유출됨)</div>
+    <h3 style="margin:6px 0 0;"><code>{{flag}}</code></h3>
+  </div>
+  <h4>봇이 발견한 위험 본문</h4>
+  <table>
+    <tr><th>위치</th><th>번호</th><th>제목</th><th>본문 일부</th></tr>
+    {% for h in hits %}
+    <tr><td>{{h.kind}}</td><td>{{h.id}}</td><td>{{h.title}}</td><td><code>{{h.snippet}}</code></td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% else %}
+<div class="card">
+  <h3 style="margin-top:0;">검토 결과: 이상 없음</h3>
+  <p class="meta">
+    본문에서 실행 가능한 코드를 찾지 못했습니다. 봇은 아무 일 없이 검토를 마쳤습니다.
+  </p>
+</div>
+{% endif %}
+
+<div class="card"><a class="btn btn-sec" href="/admin">← 관리자 콘솔</a></div>
+{% endblock %}

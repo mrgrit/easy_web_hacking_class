@@ -1,22 +1,27 @@
 lab_id: ezweb-week02
-title: "리눅스 7개 명령어 + Claude Code 설치 + 심리테스트 사이트 + GitHub"
+title: "리눅스 7개 명령어 + DGX Spark ssh + Hermes Agent·오픈 모델 연결 + 심리테스트 사이트 + GitHub"
 course: ai-web-hacking
 week: 2
 description: |
   첫 '진짜' 실습. 터미널을 처음 여는 학생도 막히지 않게, 명령어는 딱 7개만 익힌다. 그다음
-  Claude Code(AI 비서)를 본인 컴퓨터에 설치하고, AI에게 한국어로 시켜 '심리테스트 웹사이트'를
-  완성한다. 마지막으로 그 사이트를 GitHub에 올리고 다시 받아본다. 어려운 코드는 전부 AI가 치고,
-  학생은 정해진 절차만 따른다. (공격자 VM = 학생 Ubuntu에서 진행)
+  **ssh 로 DGX Spark(우리 반의 AI 두뇌)에 접속**해 GPU·모델 상태를 눈으로 보고 모델과 직접
+  대화한다. 이어서 내 컴퓨터에 **Hermes Agent**를 설치하고 **오픈 모델을 머리로 연결**한 뒤,
+  일상적인 일 몇 가지를 시켜 보고, '심리테스트 웹사이트'를 완성한다. 마지막으로 GitHub에
+  올리고 다시 받아본다. 어려운 코드는 전부 에이전트가 치고, 학생은 정해진 절차만 따른다.
+  (전 과정을 학생 본인 리눅스에서 진행 / GPU(모델)만 외부 DGX Spark 를 빌려 쓴다)
 difficulty: easy
-duration_minutes: 180
+duration_minutes: 300
 prerequisites:
   - "Week 01 통과 + 보안 서약서 서명"
   - "Ubuntu 리눅스 환경(또는 강사가 제공한 VM)"
+  - "강사에게 받은 DGX Spark 접속 정보: 계정 이름 / 주소(IP) / 비밀번호 / 사용할 모델 태그"
   - "GitHub 계정(없으면 이번 실습 시작에 가입)"
 objectives:
   - "리눅스 기본 명령어 7개로 파일/폴더를 다룬다"
-  - "Claude Code 설치 후 첫 대화로 파일을 생성시킨다"
-  - "AI에게 지시해 심리테스트 웹사이트를 완성하고 브라우저로 연다"
+  - "ssh 로 DGX Spark 에 접속해 GPU·모델 상태를 확인하고 모델과 직접 대화한다"
+  - "Hermes Agent 를 설치하고 DGX Spark 의 오픈 모델을 머리로 연결한다"
+  - "에이전트에게 일상 작업을 시키고 결과를 스스로 검증한다"
+  - "에이전트에게 지시해 심리테스트 웹사이트를 완성하고 브라우저로 연다"
   - "GitHub에 push 하고 다른 위치에서 clone 한다"
 pass_threshold: 0.7
 steps:
@@ -27,8 +32,9 @@ steps:
       터미널을 열고, 명령어 7개로 작업 폴더를 만든다.
       ## 개념 한 줄
       터미널은 컴퓨터와 쪽지로 대화하는 창. 명령을 치면 답을 적어준다.
-      ## 💻 실행 명령
+      ## 💻 실행 명령 (내 컴퓨터에서)
       ```bash
+      hostname            # 지금 내가 쓰는 컴퓨터 이름 (오늘 두 대를 오가니 습관화!)
       pwd                 # 내가 어디 있나
       mkdir mysite        # 작업 폴더 생성
       cd mysite           # 그 폴더로 이동
@@ -39,11 +45,12 @@ steps:
       마지막 `pwd` 결과가 `mysite` 로 끝난다.
       ## 🧰 옵션 풀이
       - `mkdir`=make directory(폴더 생성), `cd`=change directory(이동), `ls`=list(목록).
+      - `hostname` 을 습관화하는 이유: 오늘은 '내 노트북'과 'DGX Spark' 두 대를 오간다.
     hint: "mkdir 로 만들고 cd 로 들어간다"
     category: linux_basic
-    points: 10
+    points: 8
     answer: |
-      pwd; mkdir mysite; cd mysite; pwd; ls
+      hostname; pwd; mkdir mysite; cd mysite; pwd; ls
       → 마지막 pwd 가 '/.../mysite'
     answer_detail: "터미널·파일시스템 첫 체험. 현재 위치가 mysite 폴더로 바뀌었으면 성공. 이후 모든 작업을 이 폴더에서 한다."
     verify:
@@ -54,97 +61,225 @@ steps:
 
   - order: 2
     instruction: |
-      ## 🎯 목표
-      Claude Code(AI 비서)를 설치한다.
+      ## 🎯 목표 ★
+      ssh 로 **DGX Spark**(우리 반의 AI 두뇌)에 접속해, AI가 실제로 어떤 기계에서 도는지 눈으로 본다.
       ## 개념 한 줄
-      Claude Code는 터미널에서 도는 AI 에이전트. 한국어로 시키면 파일을 만들고 명령을 실행한다.
+      ssh = 다른 컴퓨터의 터미널을 내 화면에 끌어오는 도구. 접속하면 프롬프트 이름이 바뀐다.
       ## 💻 실행 명령
       ```bash
-      sudo apt-get update && sudo apt-get install -y nodejs npm
-      sudo npm install -g @anthropic-ai/claude-code
-      claude --version
+      # ① 접속 (계정·주소는 강사가 알려준 값으로)
+      ssh student01@192.168.0.60
+      #   처음이면 "Are you sure...?" → yes 입력
+      #   비밀번호 입력 시 화면에 아무것도 안 보이는 건 정상!
+
+      # ② 접속되면 프롬프트가 바뀐다 → student01@dgx-spark:~$
+      hostname            # 이제 DGX 이름이 나온다
+
+      # ③ GPU 상태 보기
+      nvidia-smi
+
+      # ④ 이 서버에 있는 모델 목록
+      ollama list
+
+      # ⑤ 지금 메모리에 올라와 있는 모델
+      ollama ps
+
+      # ⑥ 모델에게 직접 말 걸기 (모델 태그는 강사 안내대로)
+      ollama run qwen3:32b
+      #   >>> 프롬프트가 뜨면 한국어로 질문:
+      #   너는 어떤 모델이고 어디서 돌고 있어? 두 문장으로 대답해줘.
+      #   나올 때는  /bye
+
+      # ⑦ DGX 에서 나오기 (아주 중요!)
+      exit
       ```
-      (sudo 비밀번호를 물으면 강사 안내에 따라 입력)
       ## ✅ 합격 기준
-      `claude --version` 이 버전 번호를 출력한다.
+      `ollama list` 에 모델 목록이 보이고, `ollama run` 에서 모델이 한국어로 답한다.
+      그리고 `exit` 로 내 컴퓨터로 돌아온다(`hostname` 으로 확인).
       ## 🧰 옵션 풀이
-      - `npm install -g`: 컴퓨터 전체에서 쓰도록 설치(-g=global).
-      - 설치가 처음이라 시간이 좀 걸릴 수 있다. 에러가 나면 화면을 그대로 강사/AI에게 보여준다.
-    hint: "npm install -g @anthropic-ai/claude-code"
-    category: setup
+      - `nvidia-smi` = GPU 상태판. 메모리 사용량이 곧 "모델이 앉은 자리".
+      - 처음 `ollama run` 은 모델을 메모리에 올리느라 수십 초 걸릴 수 있다. 정상이다.
+      - 공용 장비 예절: 내 홈 폴더 안에서만, `ollama pull` 은 강사만, 끝나면 `exit`.
+    hint: "ssh 계정@주소 → ollama list → ollama run → /bye → exit"
+    category: remote
     points: 15
     answer: |
-      sudo npm install -g @anthropic-ai/claude-code && claude --version
-    answer_detail: "Claude Code 설치 확인. 버전 문자열이 출력되면 성공. 처음 실행 시 계정 로그인(연결)을 1회 진행한다."
+      ssh student01@<dgx-ip>  →  nvidia-smi / ollama list / ollama ps  →  ollama run <model> → /bye → exit
+    answer_detail: "AI 인프라를 직접 만져 보는 단계. 모델 목록이 보이고 대화가 되면 통과. '모델은 어느 컴퓨터의 어느 프로그램'이라는 실체 감각을 잡는 것이 목적이며, 다음 단계(Hermes 연결)에서 이 주소:11434 를 그대로 쓴다. 첫 번째 '우와' 포인트."
     verify:
-      type: output_contains
-      expect: "."
-      field: stdout
+      type: manual
+      check: "ollama list 결과를 확인하고, 모델과 한국어 대화를 1회 성공한 뒤 exit 했다."
     target: attacker
 
   - order: 3
     instruction: |
       ## 🎯 목표
-      AI 비서와 첫 대화 — 말로 파일을 만들게 한다.
+      내 컴퓨터에 **Hermes Agent**(AI 비서의 '몸')를 설치한다.
       ## 개념 한 줄
-      에이전트는 '말'이 아니라 '행동'을 한다. 시키면 진짜로 파일이 생긴다.
-      ## 💻 해보기
+      Hermes Agent는 터미널에서 도는 오픈소스 AI 에이전트. 한국어로 시키면 파일을 만들고 명령을 실행한다.
+      ## 💻 실행 명령 (⚠️ DGX 가 아니라 '내 컴퓨터'에서!)
       ```bash
-      claude
+      hostname     # 내 노트북 이름이 맞는지 먼저 확인 (DGX 면 exit 로 나온다)
+
+      curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+      source ~/.bashrc          # zsh 사용자는 source ~/.zshrc
+      hermes --help
       ```
-      가 켜지면 한국어로 입력:
-      `이 폴더에 hello.txt 를 만들고 안에 '나의 첫 AI 비서'라고 써줘.`
-      잠시 후 종료하고 확인:
+      ## ✅ 합격 기준
+      `hermes --help` 가 명령 목록(도움말)을 출력한다.
+      ## 🧰 옵션 풀이
+      - 설치에 몇 분 걸린다. 파이썬 환경·Node.js·검색 도구 등을 함께 깔기 때문이다.
+      - `command not found: hermes` → `source ~/.bashrc` 를 다시 하거나 터미널을 새로 연다.
+      - 에러가 나면 화면을 그대로 강사에게 보여준다. **에러는 실패가 아니라 단서다.**
+    hint: "install.sh 한 줄 → source ~/.bashrc → hermes --help"
+    category: setup
+    points: 12
+    answer: |
+      curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+      source ~/.bashrc && hermes --help
+    answer_detail: "Hermes Agent 설치 확인. 도움말이 출력되면 성공. 아직 '머리(모델)'는 안 붙은 상태 — 다음 단계에서 연결한다."
+    verify:
+      type: output_contains
+      expect: "hermes"
+      field: stdout
+    target: attacker
+
+  - order: 4
+    instruction: |
+      ## 🎯 목표 ★★ (오늘의 핵심)
+      Hermes(몸)에 **DGX Spark 의 오픈 모델(머리)** 을 연결하고, **도구 호출이 되는지 검증**한다.
+      ## 개념 한 줄
+      에이전트와 모델은 다른 것이다. 에이전트에 모델 주소를 알려 주면 둘이 연결된다.
+      ## 💻 실행 명령
+      ```bash
+      hermes setup
+      ```
+      마법사가 물으면 이렇게 답한다:
+      - 공급자(provider) → **Custom Endpoint**(직접 입력)
+      - Base URL        → `http://192.168.0.60:11434/v1`   ← 강사가 알려준 DGX 주소, **/v1 필수!**
+      - API Key         → 비워 두거나 `no-key`
+      - Model           → 강사가 알려준 모델 태그 (예: `qwen3:32b`)
+
+      로컬 모델은 느릴 수 있으니 대기 시간을 넉넉히 준다:
+      ```bash
+      echo 'HERMES_API_TIMEOUT=1800' >> ~/.hermes/.env
+      ```
+      이제 연결과 **도구 호출**을 함께 검증한다:
+      ```bash
+      cd ~/mysite
+      hermes
+      ```
+      hermes 안에서 그대로 입력:
+      ```
+      지금 폴더에 hello.txt 파일을 만들고 안에 '나의 첫 AI 비서'라고 써줘.
+      ```
+      종료 후 내 눈으로 확인:
       ```bash
       cat hello.txt
       ```
       ## ✅ 합격 기준
       `cat hello.txt` 출력에 `나의 첫 AI 비서` 가 보인다.
       ## 🧰 옵션 풀이
-      - `cat`=파일 내용 출력. 에이전트가 정말 파일을 만들었는지 두 눈으로 확인하는 단계.
-    hint: "claude 안에서 한국어로 시킨 뒤 cat 으로 확인"
+      - **`/v1` 을 빼먹는 실수가 가장 흔하다.** 브라우저로 `http://<dgx>:11434` 를 열어
+        `Ollama is running` 이 보이면 서버는 정상이다.
+      - **말만 하고 파일이 안 생기면** 그 모델이 '도구 호출'을 못 하는 것이다.
+        hermes 안에서 `/model` 로 강사가 지정한 다른 모델로 바꾼 뒤 다시 시도한다.
+      - 문제가 있으면 `hermes doctor` 로 자동 진단.
+    hint: "hermes setup → Custom Endpoint → http://<dgx>:11434/v1 → 모델 태그. 그다음 파일 생성으로 검증."
     category: agent_first
-    points: 15
+    points: 20
     answer: |
-      (claude 안) "hello.txt 를 만들고 '나의 첫 AI 비서'라고 써줘"
-      cat hello.txt   → '나의 첫 AI 비서'
-    answer_detail: "AI 에이전트가 파일 생성이라는 '행동'을 수행함을 확인. cat 출력에 지정 문구가 보이면 성공. 첫 번째 '우와' 포인트."
+      hermes setup → provider=custom, base_url=http://<dgx-ip>:11434/v1, model=<태그>
+      (또는 ~/.hermes/config.yaml 의 model 항목을 직접 수정)
+      hermes 안에서: "hello.txt 를 만들고 '나의 첫 AI 비서'라고 써줘"
+      cat hello.txt → '나의 첫 AI 비서'
+    answer_detail: |
+      Week 01 에서 그림으로 그린 '몸+머리' 구조를 실제로 조립하는 단계. config.yaml 형태는
+        model:
+          default: "qwen3:32b"
+          provider: "custom"
+          base_url: "http://<dgx-ip>:11434/v1"
+      파일이 실제로 생성되면 (a) 엔드포인트 연결과 (b) 모델의 도구 호출 지원이 동시에 검증된다.
+      추론 특화 모델(deepseek-r1 계열 등)은 버전에 따라 도구 호출을 못 할 수 있으므로,
+      강사는 도구 호출이 확인된 모델을 1~2개 미리 지정해 둘 것. 파일이 안 생기면 모델 교체.
     verify:
       type: output_contains
       expect: "나의 첫 AI 비서"
       field: stdout
     target: attacker
 
-  - order: 4
+  - order: 5
     instruction: |
       ## 🎯 목표
-      Claude Code로 심리테스트 웹사이트를 만든다.
+      에이전트에게 **일상적인 일**을 시키고, 결과를 내 눈으로 검증한다.
       ## 개념 한 줄
-      웹페이지는 HTML(뼈대)·CSS(꾸밈)·JS(움직임). 직접 코딩 안 하고 AI에게 시킨다.
-      ## 💻 해보기 (claude 안에서 그대로 입력)
+      좋은 지시는 '무엇을 / 어디에 / 어떻게 확인할지'가 분명하다.
+      ## 💻 해보기 (`cd ~/mysite` 후 `hermes` 안에서 하나씩)
+      ```
+      ① 지금 폴더에 어떤 파일들이 있는지 확인하고, 파일 이름과 크기를 표로 정리해서
+         files.md 라는 파일로 저장해줘.
+
+      ② 방금 만든 files.md 를 읽고, 이 폴더가 무슨 폴더인지 두 문장으로 설명해줘.
+
+      ③ 오늘 날짜와 시간을 화면에 예쁘게 출력하는 파이썬 스크립트를 today.py 로 만들고,
+         실제로 한 번 실행해서 결과를 보여줘.
+      ```
+      끝나면 hermes 를 빠져나와 **내 눈으로 확인**:
+      ```bash
+      ls
+      cat files.md
+      python3 today.py
+      ```
+      ## ✅ 합격 기준
+      `files.md` 와 `today.py` 가 실제로 존재하고, `python3 today.py` 가 날짜/시간을 출력한다.
+      ## 🧰 옵션 풀이
+      - 에이전트가 "했습니다" 라고 말하는 것과 **실제로 된 것**은 다르다. 항상 확인한다.
+      - 안 되면: "방금 건 잘 안 된 것 같아. 왜 안 됐는지 보고 다른 방법으로 다시 해줘."
+      - 안전 습관 3가지: 작업 폴더에서만 실행 / 삭제는 확인 후 / 비밀번호·토큰은 붙여넣지 않기.
+    hint: "시키고 → 내 눈으로 확인(ls, cat, 실행)"
+    category: agent_use
+    points: 15
+    answer: |
+      (hermes 안) files.md 생성 → 요약 설명 → today.py 생성·실행
+      확인: ls / cat files.md / python3 today.py
+    answer_detail: "AI에게 일을 제대로 시키고 결과를 검증하는 사이클을 몸에 붙이는 단계. 두 번째 '우와' 포인트. Week 04 의 '점검 시키고 → 브라우저로 검증' 과 정확히 같은 구조다."
+    verify:
+      type: file_exists
+      expect: "today.py"
+    target: attacker
+
+  - order: 6
+    instruction: |
+      ## 🎯 목표
+      Hermes Agent로 심리테스트 웹사이트를 만든다.
+      ## 개념 한 줄
+      웹페이지는 HTML(뼈대)·CSS(꾸밈)·JS(움직임). 직접 코딩 안 하고 에이전트에게 시킨다.
+      ## 💻 해보기 (`~/mysite` 에서 `hermes` 실행 후 그대로 입력)
       ```
       심리테스트 웹사이트를 index.html 한 파일로 만들어줘.
       질문 5개에 답하면 동물 유형(고양이/강아지/부엉이/돌고래) 결과가 나오고,
       유형마다 설명과 이모지가 보이게 해줘. 파스텔톤으로 예쁘게, 모바일에서도 잘 보이게,
-      결과 화면엔 '다시 하기' 버튼도 넣어줘.
+      결과 화면엔 '다시 하기' 버튼도 넣어줘. 다 만들면 파일 크기를 알려줘.
       ```
       마음에 안 들면 말로 수정: "배경을 더 알록달록하게", "질문을 학교생활 주제로 바꿔줘" 등.
       ## ✅ 합격 기준
-      `ls` 에 `index.html` 이 보이고, 파일 크기가 0이 아니다.
+      `ls -l` 에 `index.html` 이 보이고, 파일 크기가 0이 아니다.
       ## 🧰 옵션 풀이
-      - 한 번에 완벽하지 않아도 된다. "에러 나는데 고쳐줘"처럼 말로 계속 다듬는 게 AI 작업 방식.
-    hint: "원하는 걸 구체적으로 한국어로. 수정도 말로."
+      - **로컬 모델 팁:** 한 번에 다 안 되면 **작게 나눠서** 시킨다.
+        "① 질문 5개와 결과 4종만 정해줘" → "② 그걸로 index.html 을 만들어줘" → "③ 디자인을 바꿔줘"
+      - 한 번에 완벽하지 않아도 된다. 말로 계속 다듬는 게 AI 작업 방식.
+    hint: "원하는 걸 구체적으로. 안 되면 작게 나눠서."
     category: build
-    points: 20
+    points: 15
     answer: |
-      (claude 안) 위 프롬프트 → index.html 생성. ls 로 확인.
-    answer_detail: "AI에게 자연어로 지시해 완성된 산출물을 얻는 핵심 경험. index.html이 생성되면 성공. 결과물의 완성도는 학생이 말로 반복 수정해 끌어올린다."
+      (hermes 안) 위 프롬프트 → index.html 생성. ls -l 로 크기 확인.
+    answer_detail: "AI에게 자연어로 지시해 완성된 산출물을 얻는 핵심 경험. index.html이 생성되면 성공. 로컬 오픈 모델은 긴 산출물을 한 번에 못 낼 수 있으므로 분할 지시가 핵심 노하우다."
     verify:
       type: file_exists
       expect: "index.html"
     target: attacker
 
-  - order: 5
+  - order: 7
     instruction: |
       ## 🎯 목표
       만든 사이트를 브라우저로 띄운다.
@@ -152,6 +287,7 @@ steps:
       작은 웹서버를 띄우면 내 사이트에 주소(http://localhost:5500)가 생긴다.
       ## 💻 실행 명령
       ```bash
+      cd ~/mysite
       python3 -m http.server 5500
       ```
       브라우저에서 `http://localhost:5500` 접속 → 심리테스트를 직접 해본다.
@@ -159,18 +295,19 @@ steps:
       브라우저에 심리테스트 화면이 뜨고, 5문항 후 결과가 나온다.
       ## 🧰 옵션 풀이
       - `python3 -m http.server 5500`: 현재 폴더를 5500번 포트로 서비스. 멈추려면 Ctrl+C.
+      - 서버가 도는 동안 그 터미널은 점유된다. 명령을 더 치려면 새 터미널 창을 연다.
     hint: "http.server 띄우고 localhost:5500"
     category: run
-    points: 15
+    points: 10
     answer: |
       python3 -m http.server 5500  → http://localhost:5500 접속해 테스트 진행
-    answer_detail: "내가 만든 사이트가 실제 브라우저에서 동작하는 두 번째 '우와' 포인트. 결과 화면까지 도달하면 성공."
+    answer_detail: "내가 만든 사이트가 실제 브라우저에서 동작하는 세 번째 '우와' 포인트. 결과 화면까지 도달하면 성공. 다음 주 '요청과 응답' 개념의 맛보기."
     verify:
       type: manual
       check: "브라우저에서 심리테스트 결과 화면까지 확인."
     target: attacker
 
-  - order: 6
+  - order: 8
     instruction: |
       ## 🎯 목표
       내 사이트를 GitHub에 올린다(push).
@@ -179,6 +316,7 @@ steps:
       ## 💻 실행 명령
       ```bash
       # GitHub 웹에서 New repository → 'my-psychotest' 생성(빈 repo)
+      cd ~/mysite
       git init
       git add .
       git commit -m "내 첫 심리테스트 사이트"
@@ -190,22 +328,23 @@ steps:
       GitHub 저장소 페이지를 새로고침하면 `index.html` 이 올라와 있다.
       ## 🧰 옵션 풀이
       - `add`=올릴 파일 고르기, `commit`=저장 기록 남기기, `push`=인터넷에 올리기.
-      - 복잡하면 claude 에게 "이 폴더를 내 GitHub에 올려줘" 라고 시켜도 된다.
+      - 복잡하면 hermes 에게 "이 폴더를 내 GitHub에 올려줘" 라고 시켜도 된다.
+      - ⚠️ 비밀번호·토큰은 절대 올리지 않는다. 인증은 GitHub 토큰으로 한다.
     hint: "init → add → commit → push"
     category: github
-    points: 15
+    points: 10
     answer: |
       git init; git add .; git commit -m "..."; git branch -M main; git remote add origin <URL>; git push -u origin main
-    answer_detail: "버전관리·원격 백업 습관 형성. GitHub에 index.html이 보이면 성공. 세 번째 '우와' 포인트(인터넷에 내 작품 주소가 생김)."
+    answer_detail: "버전관리·원격 백업 습관 형성. GitHub에 index.html이 보이면 성공. 네 번째 '우와' 포인트(인터넷에 내 작품 주소가 생김)."
     verify:
       type: manual
       check: "GitHub 저장소에 index.html 이 보인다."
     target: attacker
 
-  - order: 7
+  - order: 9
     instruction: |
       ## 🎯 목표
-      올린 작품을 다른 위치(집/다른 폴더)에서 다시 받는다(clone). 그리고 특강 자료도 받아본다.
+      올린 작품을 다른 위치에서 다시 받는다(clone). 그리고 특강 자료도 받아본다.
       ## 개념 한 줄
       clone=저장소를 통째로 내려받기. 어디서나 이어서 작업할 수 있다.
       ## 💻 실행 명령
@@ -213,7 +352,7 @@ steps:
       cd ~
       git clone https://github.com/<내아이디>/my-psychotest.git
       ls my-psychotest                 # index.html 이 받아짐
-      # (다음 주 표적도 미리 받아두기)
+      # (다음 주 표적·실습 자료도 미리 받아두기)
       git clone https://github.com/mrgrit/easy_web_hacking_class.git
       ```
       ## ✅ 합격 기준
@@ -222,10 +361,10 @@ steps:
       - 집 컴퓨터에서도 같은 명령으로 받으면 끊김 없이 이어서 작업·발표 가능.
     hint: "git clone <내 저장소 URL>"
     category: github
-    points: 10
+    points: 8
     answer: |
       git clone https://github.com/<내아이디>/my-psychotest.git; ls my-psychotest
-    answer_detail: "원격→로컬 복제 경험. clone 한 폴더에 index.html이 있으면 성공. '집에서도 이어서'가 가능해진다."
+    answer_detail: "원격→로컬 복제 경험. clone 한 폴더에 index.html이 있으면 성공. 다음 주 표적 자료도 함께 확보한다."
     verify:
       type: output_contains
       expect: "index.html"

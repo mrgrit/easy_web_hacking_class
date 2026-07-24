@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}회원가입 · AI 웹 해킹 특강{% endblock %}
+{% block content %}
+<div class="section" style="max-width:520px;margin:40px auto">
+  <h2>회원가입</h2>
+  {% if error %}<div class="info warn">⚠️ {{ error }}</div>{% endif %}
+  <div class="info">
+    <form method="POST" class="form">
+      <label>아이디 <span class="muted">(영문/숫자, 3~24자 · CTF 리더보드에 이 이름이 뜹니다)</span></label>
+      <input name="username" required autofocus placeholder="예: hong-gildong">
+
+      <label>이메일 <span class="muted">(선택)</span></label>
+      <input name="email" type="email" placeholder="예: student@school.kr">
+
+      <label>비밀번호 <span class="muted">(6자 이상)</span></label>
+      <input name="password" type="password" required>
+
+      <label>비밀번호 확인</label>
+      <input name="password2" type="password" required>
+
+      <label>관리자 코드 <span class="muted">(강사만 입력 · 학생은 비워 두세요)</span></label>
+      <input name="admin_code" type="password" placeholder="(비워 두기)">
+
+      <button class="btn" type="submit">가입하기</button>
+    </form>
+  </div>
+  <p class="muted" style="font-size:13.5px">
+    · 가입하면 <b>CTF 플랫폼(CTFd) 계정도 같은 아이디·비밀번호로</b> 자동 생성됩니다(연동 설정 시).<br>
+    · <b>학생 등급</b>은 교과서·실습·담벼락을 볼 수 있고, <b>정답·해설은 볼 수 없습니다.</b><br>
+    · 이미 계정이 있다면 <a href="/login">로그인</a>.
+  </p>
+</div>
+{% endblock %}

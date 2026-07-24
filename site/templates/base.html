@@ -9,18 +9,33 @@
 <body>
 <div class="topbar">
   <div class="wrap">
-    <span class="brand">🕵️ AI 웹 해킹 특강</span>
+    <a class="brand" href="/">🕵️ AI 웹 해킹 특강</a>
     <nav>
       <a href="/">홈</a>
       <a href="/lecture/01">교과서</a>
       <a href="/lab/01">실습</a>
+      <a href="/lecture/ai01">특별 세션</a>
+      <a href="/board">📌 담벼락</a>
+      {% if ctfd_url %}<a href="{{ ctfd_url }}" target="_blank" rel="noopener">🏁 CTF</a>{% endif %}
+      {% if is_admin %}<a href="/solutions">🔐 풀이</a><a href="/admin/users">👥 수강생</a>{% endif %}
     </nav>
+    <div class="who">
+      {% if me %}
+        <span class="tagrole {{ me.role }}">{{ '관리자' if me.role=='admin' else '학생' }}</span>
+        <b>{{ me.username }}</b> · <a href="/logout">로그아웃</a>
+      {% else %}
+        <a href="/login">로그인</a> · <a href="/register">회원가입</a>
+      {% endif %}
+    </div>
   </div>
 </div>
 <div class="wrap">
+  {% with msgs = get_flashed_messages() %}
+    {% if msgs %}{% for m in msgs %}<div class="info flash">✅ {{ m }}</div>{% endfor %}{% endif %}
+  {% endwith %}
 {% block content %}{% endblock %}
   <div class="footer">AI로 배우는 웹 해킹 특강 · 모든 실습은 허락된 환경에서만 ·
-    커스텀 취약 사이트 출처: mrgrit/ccc</div>
+    커스텀 취약 사이트 출처: mrgrit/ccc · mrgrit/el34</div>
 </div>
 {% block scripts %}{% endblock %}
 </body>

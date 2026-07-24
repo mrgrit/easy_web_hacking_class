@@ -29,22 +29,30 @@ FLAG_RE = re.compile(r"flag\{[^}]*\}", re.IGNORECASE)
 # 문제별 '방향' 힌트(절대 flag 미포함). 오프라인 폴백 + LLM 시스템 프롬프트 양쪽에 쓰인다.
 CHALLENGES = {
     "1": {"name": "페이지 속 깃발 (Recon)",
-          "dir": "화면에 안 보이는 정보는 '페이지 소스'에 있다. 브라우저에서 Ctrl+U(소스 보기)를 누르고, "
-                 "게시판의 '공지' 글을 연 뒤 HTML 주석 <!-- ... --> 안을 살펴봐."},
+          "dir": "화면에 안 보이는 정보는 '페이지 소스'에 있어. 게시판에서 [공지] 글을 연 다음 Ctrl+U "
+                 "(소스 보기)를 누르고, 소스 창에서 Ctrl+F 로 'TODO' 나 '<!--' 를 찾아봐. "
+                 "HTML 주석은 화면에 안 그려지지만 원본에는 그대로 남아 있어."},
     "2": {"name": "인증 없는 회원 API (PII)",
-          "dir": "로그인 없이 열리는 API 주소를 추측해봐(예: /api/users). 응답(JSON)에서 role 이 admin 인 "
-                 "사용자의 비밀 키(api_key) 필드를 확인해."},
+          "dir": "주소를 찍어서 맞히지 마. 상단 메뉴 '회원 찾기'로 가서 F12 → Network 탭을 켠 채로 검색을 "
+                 "눌러 봐. 이 화면이 뒤에서 어떤 주소를 부르는지 그대로 보여. 그 응답에서 role 이 admin 인 "
+                 "사람의 비밀 키(api_key) 칸을 확인해. /robots.txt 에도 그 주소가 적혀 있어."},
     "3": {"name": "남의 진료기록 (IDOR)",
-          "dir": "진료기록 API(/api/medical-records, /api/medical-records/<번호>)에서 번호를 1부터 바꿔가며 "
-                 "남의 기록까지 열어봐. 처방/소견 칸을 잘 읽어."},
+          "dir": "상단 메뉴 '진료기록'에서 아무 기록이나 [상세 보기]를 눌러 봐. 주소창 끝의 숫자가 '몇 번 "
+                 "기록'인지를 뜻해. 그 숫자를 1부터 5까지 바꿔 가며(또는 [다음 기록 ▶] 버튼으로) 열어 보고, "
+                 "'처방 / 소견' 칸을 잘 읽어. 남의 기록이 막힘 없이 열리는 것 자체가 취약점이야."},
     "4": {"name": "관리자 쪽지 도청",
-          "dir": "'관리자 전용'인데 인증을 안 거는 API 를 추측해봐(예: /api/admin/dms). 쪽지 본문을 전부 읽어."},
+          "dir": "먼저 /robots.txt 를 열어 봐. '검색엔진 수집 금지' 목록이 사실은 '숨기고 싶은 주소' 목록이야. "
+                 "거기 적힌 관리자 콘솔로 들어가면 로그인 없이 그냥 열려. 메뉴에서 '쪽지 감사'를 눌러 "
+                 "본문(body) 칸을 훑어봐."},
     "5": {"name": "예측 가능한 세션",
-          "dir": "로그인 후 쿠키 MFSID 값의 규칙을 관찰해(예: sess-2001). 관리자는 더 일찍 로그인했어 — 더 낮은 "
-                 "번호를 시도해보고, 관리자 전용 경로(/admin/secret)에 들어가 봐."},
+          "dir": "회원가입·로그인한 뒤 F12 → Application(저장소) → Cookies 에서 MFSID 값을 봐. 값이 "
+                 "sess-숫자 모양이면 그 숫자는 '몇 번째 손님'이라는 뜻이야. 계정을 하나 더 만들어 보면 "
+                 "규칙이 확실해져. 관리자는 서비스 첫날 로그인했으니 훨씬 이른 번호를 쓰겠지? "
+                 "쿠키 값을 고친 뒤 관리자 전용 금고 페이지를 F5 로 새로고침해."},
     "6": {"name": "저장형 XSS — 관리자 봇",
-          "dir": "게시글/댓글 본문에 <script>alert(1)</script> 처럼 스크립트를 저장해봐. 그 다음 관리자가 글을 "
-                 "검토하는 경로(/admin/review)를 호출하면 봇이 반응해."},
+          "dir": "회원가입·로그인 후 새 글을 쓰는데, 본문에 <script>alert('xss')</script> 를 그대로 적어 저장해 봐. "
+                 "그다음 그 글 아래의 [🚨 신고하기] 버튼을 눌러 관리자를 부르고, 관리자 콘솔(/admin)의 "
+                 "'신고 검토(관리자 봇)' 메뉴로 가 봐. 봇이 네 글을 열어 보면 무슨 일이 생길까?"},
 }
 
 SYSTEM_RULES = (
@@ -124,19 +132,20 @@ def ask():
     if not question:
         return jsonify({"answer": "무엇이 막혔는지 적어줘! 예: '이 문제 어디부터 봐야 해?'"})
 
-    answer = ask_anthropic(question, ch) or ask_ollama(question, ch) or offline_hint(question, ch)
-    backend = ("anthropic" if ANTHROPIC_API_KEY else "ollama" if OLLAMA_URL else "offline")
+    # 이 특강은 오픈 모델(DGX Spark 의 Ollama)을 우선 쓴다. 없으면 Anthropic, 그것도 없으면 오프라인.
+    answer = ask_ollama(question, ch) or ask_anthropic(question, ch) or offline_hint(question, ch)
+    backend = ("ollama" if OLLAMA_URL else "anthropic" if ANTHROPIC_API_KEY else "offline")
     return jsonify({"answer": redact(answer), "backend": backend})
 
 
 @app.route("/_health")
 def health():
     return {"ok": True, "service": "ctf-ai-helper",
-            "backend": ("anthropic" if ANTHROPIC_API_KEY else "ollama" if OLLAMA_URL else "offline")}
+            "backend": ("ollama" if OLLAMA_URL else "anthropic" if ANTHROPIC_API_KEY else "offline")}
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8001"))
     print(f"[ai-helper] listening on :{port} "
-          f"(backend={'anthropic' if ANTHROPIC_API_KEY else 'ollama' if OLLAMA_URL else 'offline'})")
+          f"(backend={'ollama' if OLLAMA_URL else 'anthropic' if ANTHROPIC_API_KEY else 'offline'})")
     app.run(host="0.0.0.0", port=port)

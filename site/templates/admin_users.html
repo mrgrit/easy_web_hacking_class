@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}수강생 관리 · AI 웹 해킹 특강{% endblock %}
+{% block content %}
+<div class="section">
+  <h2>👥 수강생 관리 <span class="muted" style="font-size:14px">({{ users|length }}명)</span></h2>
+  <div class="info" style="margin-bottom:14px">
+    {% if ctfd_linked %}
+      ✅ CTFd 연동됨 — 회원가입 시 CTF 계정이 자동 생성됩니다.
+    {% else %}
+      ⚠️ CTFd 연동이 설정되지 않았습니다. <code>CTFD_URL</code> · <code>CTFD_ADMIN_TOKEN</code>
+      환경변수를 넣고 강좌 사이트를 재기동하면, 이후 가입자부터 자동 연동됩니다.
+      기존 학생은 아래 <b>CTF 계정 만들기</b> 버튼으로 개별 연동할 수 있습니다.
+    {% endif %}
+  </div>
+  <div class="doc" style="padding:16px 18px">
+    <table>
+      <tr><th>#</th><th>아이디</th><th>이메일</th><th>등급</th><th>CTFd</th><th>가입</th><th>관리</th></tr>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td><b>{{ u.username }}</b></td>
+        <td>{{ u.email or '—' }}</td>
+        <td><span class="tagrole {{ u.role }}">{{ '관리자' if u.role=='admin' else '학생' }}</span></td>
+        <td class="muted">{{ u.ctfd_status or '—' }}</td>
+        <td class="muted" style="font-size:12.5px">{{ u.created_at }}</td>
+        <td style="white-space:nowrap">
+          <form method="POST" action="/admin/users/{{ u.id }}/role" style="display:inline">
+            <input type="hidden" name="role" value="{{ 'student' if u.role=='admin' else 'admin' }}">
+            <button class="btn ghost" type="submit">{{ '학생으로' if u.role=='admin' else '관리자로' }}</button>
+          </form>
+          <form method="POST" action="/admin/users/{{ u.id }}/ctfd-sync" style="display:inline">
+            <button class="btn ghost" type="submit">CTF 계정 만들기</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <p class="muted" style="font-size:13.5px">
+    · <b>관리자</b> 등급만 실습 페이지의 정답·해설과 <a href="/solutions">강사용 풀이</a>를 볼 수 있습니다.<br>
+    · 수업 시작 전에 학생 계정이 전부 <b>학생</b> 등급인지 꼭 확인하세요.
+  </p>
+</div>
+{% endblock %}

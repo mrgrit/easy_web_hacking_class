@@ -1,28 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-  <h2 style="margin-top:0;">사용자 검색</h2>
-  <form method="GET">
-    <input name="q" value="{{q}}" placeholder="이름/이메일/소개 검색...">
+  <h2 style="margin-top:0;">회원 찾기</h2>
+  <p class="meta">이름·이메일·소개·역할(admin/doctor/patient)로 찾을 수 있습니다.</p>
+  <form id="f" onsubmit="return doSearch(event)">
+    <input id="q" name="q" value="{{q}}" placeholder="예: 관리자 / admin / 김의사 / 당뇨">
     <button class="btn" type="submit">검색</button>
+    <button class="btn btn-sec" type="button" onclick="document.getElementById('q').value='';doSearch()">전체 보기</button>
   </form>
 </div>
-{% if results %}
+
 <div class="card">
-  <table>
-    <tr><th>id</th><th>이름</th><th>역할</th><th>이메일</th><th>전화</th><th>주민(masked)</th><th>API key</th></tr>
-    {% for r in results %}
-    <tr>
-      <td>{{r.id}}</td>
-      <td><a href="/profile/{{r.id}}">{{r.display_name}}</a></td>
-      <td>{{r.role}}</td>
-      <td>{{r.email}}</td>
-      <td>{{r.phone}}</td>
-      <td>{{r.ssn}}</td>
-      <td>{{r.api_key}}</td>
-    </tr>
-    {% endfor %}
-  </table>
+  <h3 style="margin-top:0;">결과 <span id="cnt" class="meta"></span></h3>
+  <div id="wrap"><p class="meta">검색어를 넣고 [검색]을 누르세요.</p></div>
 </div>
-{% endif %}
+
+<script>
+// 이 화면은 껍데기다. 실제 회원 데이터는 브라우저가 서버의 회원 API 를 호출해서 가져온다.
+// (F12 → Network 탭을 켜 두고 검색해 보면, 어떤 주소를 부르는지 그대로 보인다)
+async function doSearch(ev){
+  if (ev) ev.preventDefault();
+  const q = document.getElementById('q').value.trim();
+  const res  = await fetch('/api/users' + (q ? ('?q=' + encodeURIComponent(q)) : ''));
+  const rows = await res.json();
+  document.getElementById('cnt').textContent = '(' + rows.length + '명)';
+  if (!rows.length){ document.getElementById('wrap').innerHTML = '<p class="meta">결과 없음</p>'; return; }
+  let h = '<table><tr><th>id</th><th>이름</th><th>역할</th><th>이메일</th><th>전화</th><th>주민(masked)</th><th>API key</th></tr>';
+  for (const r of rows){
+    h += '<tr><td>'+r.id+'</td>'
+       + '<td><a href="/profile/'+r.id+'">'+ (r.display_name||'') +'</a></td>'
+       + '<td>'+ (r.role||'') +'</td><td>'+ (r.email||'') +'</td><td>'+ (r.phone||'') +'</td>'
+       + '<td>'+ (r.ssn||'') +'</td><td><code>'+ (r.api_key||'') +'</code></td></tr>';
+  }
+  document.getElementById('wrap').innerHTML = h + '</table>';
+  return false;
+}
+if ('{{q}}'.length) doSearch();
+</script>
 {% endblock %}

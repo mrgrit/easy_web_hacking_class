@@ -1,14 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Week {{ week }} {{ kind }} · AI 웹 해킹 특강{% endblock %}
+{% block title %}{{ unit or '' }} {{ kind }} · AI 웹 해킹 특강{% endblock %}
 {% block content %}
 
 <div class="docnav">
   <a class="btn ghost" href="/">← 홈</a>
-  <a class="btn {% if kind=='교과서' %}{% else %}ghost{% endif %}" href="/lecture/{{ week }}">교과서</a>
-  <a class="btn {% if kind=='실습' %}{% else %}ghost{% endif %}" href="/lab/{{ week }}">실습</a>
-  {% set wk_int = week|int %}
-  {% if wk_int > 1 %}<a class="btn ghost" href="/lecture/{{ '%02d'|format(wk_int-1) }}">← 이전 주차</a>{% endif %}
-  {% if wk_int < 5 %}<a class="btn ghost" href="/lecture/{{ '%02d'|format(wk_int+1) }}">다음 주차 →</a>{% endif %}
+  {% if unit %}
+    <a class="btn {% if kind=='교과서' %}{% else %}ghost{% endif %}" href="/lecture/{{ unit }}">교과서</a>
+    <a class="btn {% if kind=='실습' %}{% else %}ghost{% endif %}" href="/lab/{{ unit }}">실습</a>
+    {% if unit in weeks %}
+      {% set wk_int = unit|int %}
+      {% if wk_int > 1 %}<a class="btn ghost" href="/lecture/{{ '%02d'|format(wk_int-1) }}">← 이전 주차</a>{% endif %}
+      {% if wk_int < 5 %}<a class="btn ghost" href="/lecture/{{ '%02d'|format(wk_int+1) }}">다음 주차 →</a>{% endif %}
+      {% if wk_int == 5 %}<a class="btn ghost" href="/lecture/ai01">특별 세션 →</a>{% endif %}
+    {% else %}
+      {% set n = unit[-1]|int %}
+      {% if n > 1 %}<a class="btn ghost" href="/lecture/ai0{{ n-1 }}">← 이전 세션</a>{% endif %}
+      {% if n < 3 %}<a class="btn ghost" href="/lecture/ai0{{ n+1 }}">다음 세션 →</a>{% endif %}
+    {% endif %}
+  {% endif %}
 </div>
 
 <div class="doc">
@@ -17,6 +26,7 @@
 
 <div class="docnav" style="margin-top:18px">
   <a class="btn ghost" href="/">← 홈으로</a>
+  <a class="btn ghost" href="/board">📌 담벼락에 질문 남기기</a>
 </div>
 
 {% endblock %}

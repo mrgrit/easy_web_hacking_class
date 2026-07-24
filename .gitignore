@@ -6,3 +6,11 @@ infra/.ctf-venv/
 *.pyc
 __pycache__/
 .DS_Store
+# 강좌 사이트 회원 DB (로컬 실행 시 생성)
+site/users.db
+# 표적 사이트 런타임 DB / 업로드
+infra/vuln-sites/*/*.db
+infra/vuln-sites/*/uploads/
+infra/vuln-sites/*/rag/
+# 로컬 환경 설정 (토큰·키가 들어간다)
+infra/.env

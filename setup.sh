@@ -4,7 +4,11 @@
 # =============================================================================
 #  "리눅스만 설치된 맨바닥" 에서 이 한 줄이면 끝:
 #
-#        ./setup.sh
+#        ./setup.sh              # 한 대에 전부 (hub + victim)
+#        ./setup.sh hub          # 강사 서버만: 강좌 사이트 · CTFd · AI 도우미
+#        ./setup.sh victim       # 학생 PC만: DVWA · NeoBank · MediForum · AICompanion
+#
+#  교실에서는 강사 PC 에 hub, 학생 PC 마다 victim 을 씁니다 (docs/DEPLOYMENT.md 참고).
 #
 #  하는 일 (순서대로):
 #    1) 패키지 매니저 감지 (apt / dnf / pacman)
@@ -27,7 +31,8 @@ set -euo pipefail
 
 # ---- 0. 공통 준비 -----------------------------------------------------------
 REPO="$(cd "$(dirname "$0")" && pwd)"
-PROFILE_ARG="${1:-}"                         # "extras" 면 보너스 사이트까지
+MODE="${1:-all}"                             # all | hub | victim | extras
+case "$MODE" in all|hub|victim|extras) ;; *) echo "사용법: ./setup.sh [hub|victim|extras]"; exit 1;; esac
 CTFD_ADMIN="${CTFD_ADMIN:-admin}"
 CTFD_PASSWORD="${CTFD_PASSWORD:-ezweb-admin-2026}"
 CTFD_EMAIL="${CTFD_EMAIL:-admin@ezweb.local}"
@@ -151,14 +156,15 @@ fi
 ok "venv 준비 완료: $VENV"
 
 # ---- 4. 희생자 서버 전부 빌드 & 기동 ---------------------------------------
-step "4/8  서버 빌드 & 기동 (docker compose up -d --build)"
+step "4/8  서버 빌드 & 기동 (mode=$MODE)"
 cd "$REPO/infra"
-if [ "$PROFILE_ARG" = "extras" ]; then
-  echo "  (보너스 사이트 포함)"
-  $COMPOSE --profile extras up -d --build
-else
-  $COMPOSE up -d --build
-fi
+case "$MODE" in
+  hub)    PROFILES=(--profile hub) ;;
+  victim) PROFILES=(--profile victim) ;;
+  all)    PROFILES=(--profile hub --profile victim) ;;
+  extras) PROFILES=(--profile hub --profile victim --profile extras) ;;
+esac
+$COMPOSE "${PROFILES[@]}" up -d --build
 ok "컨테이너 기동 완료"
 
 # 희생자 IP 결정 (다른 PC에서 접속할 주소). 지정 없으면 첫 번째 로컬 IP
@@ -178,7 +184,7 @@ wait_http(){ # $1=url  $2=최대초  $3=이름
 }
 
 # ---- 5·6. CTFd 자동 셋업 + 문제 등록 ---------------------------------------
-if [ "${SKIP_CTFD:-0}" != "1" ]; then
+if [ "${SKIP_CTFD:-0}" != "1" ] && [ "$MODE" != "victim" ]; then
   step "5/8  CTFd 자동 셋업 (관리자 생성 + 토큰)"
   if wait_http "http://127.0.0.1:8000/setup" 150 "CTFd(:8000)"; then
     cd "$REPO/ctf"
@@ -216,8 +222,8 @@ else
 fi
 
 # ---- 7. DVWA 자동 초기화 (DB 생성 + Security=Low) ---------------------------
-if [ "${SKIP_DVWA:-0}" != "1" ]; then
-  step "7/8  DVWA 자동 초기화 (DB 생성 + Security=Low)"
+if [ "${SKIP_DVWA:-0}" != "1" ] && [ "$MODE" != "hub" ]; then
+  step "7/8  DVWA 자동 초기화 (DB 생성 + 교재 페이로드 실측)"
   if wait_http "http://127.0.0.1:8088/login.php" 120 "DVWA(:8088)"; then
     if "$PY" - <<'PYDVWA'
 import re, sys
@@ -227,20 +233,77 @@ except Exception:
     sys.exit(2)
 base = "http://127.0.0.1:8088"
 s = requests.Session()
+
 def tok(html):
     m = re.search(r"name=['\"]user_token['\"]\s+value=['\"]([0-9a-fA-F]+)['\"]", html)
     return m.group(1) if m else None
+
+def login():
+    r = s.get(base + "/login.php", timeout=10)
+    return s.post(base + "/login.php",
+                  data={"username": "admin", "password": "password",
+                        "Login": "Login", "user_token": tok(r.text)}, timeout=10)
+
 try:
-    r = s.get(base + "/login.php", timeout=5)
-    s.post(base + "/login.php",
-           data={"username": "admin", "password": "password",
-                 "Login": "Login", "user_token": tok(r.text)}, timeout=5)
-    r = s.get(base + "/setup.php", timeout=5)
+    login()
+    # ① DB 생성/초기화
+    r = s.get(base + "/setup.php", timeout=10)
     s.post(base + "/setup.php",
-           data={"create_db": "Create / Reset Database", "user_token": tok(r.text)}, timeout=15)
-    r = s.get(base + "/security.php", timeout=5)
-    s.post(base + "/security.php",
-           data={"security": "low", "seclev_submit": "Submit", "user_token": tok(r.text)}, timeout=5)
+           data={"create_db": "Create / Reset Database", "user_token": tok(r.text)}, timeout=120)
+    # ② ⚠️ DB 를 다시 만들면 users 테이블이 초기화되며 세션이 풀린다. 반드시 재로그인.
+    login()
+    # ③ 실습이 실제로 통하는지 교재 페이로드로 확인 (조용한 실패 방지)
+    #    보안등급 Low 는 compose 의 DEFAULT_SECURITY_LEVEL=low 로 브라우저마다 자동 적용된다.
+    r = s.get(base + "/vulnerabilities/sqli/",
+              params={"id": "1' UNION SELECT user, password FROM users #", "Submit": "Submit"}, timeout=15)
+    if "5f4dcc3b5aa765d61d8327deb882cf99" not in r.text:
+        print("     DVWA: DB 는 만들었지만 교재 페이로드가 통하지 않습니다 "
+              "(security 쿠키 =", s.cookies.get("security"), ")")
+        sys.exit(1)
+    print("     DVWA: DB 생성 완료 + SQLi 실측 통과 (admin/password, Security=Low 자동)")
+except Exception as e:
+    print("     DVWA 자동설정 실패(브라우저에서 admin/password 로그인 후 "
+          "Create/Reset Database 1회 클릭):", e)
+    sys.exit(1)
+PYDVWA'
+import re, sys
+try:
+    import requests
+except Exception:
+    sys.exit(2)
+base = "http://127.0.0.1:8088"
+s = requests.Session()
+
+def tok(html):
+    m = re.search(r"name=['\"]user_token['\"]\s+value=['\"]([0-9a-fA-F]+)['\"]", html)
+    return m.group(1) if m else None
+
+def login():
+    r = s.get(base + "/login.php", timeout=10)
+    return s.post(base + "/login.php",
+                  data={"username": "admin", "password": "password",
+                        "Login": "Login", "user_token": tok(r.text)}, timeout=10)
+
+try:
+    login()
+    # ① DB 생성/초기화
+    r = s.get(base + "/setup.php", timeout=10)
+    s.post(base + "/setup.php",
+           data={"create_db": "Create / Reset Database", "user_token": tok(r.text)}, timeout=90)
+    # ② ⚠️ DB 를 다시 만들면 users 테이블이 초기화되며 세션이 풀린다.
+    #    재로그인하지 않으면 아래 Security 설정이 조용히 무시되고 기본값 'impossible' 로 남아
+    #    Week 03 의 모든 실습(SQLi/XSS/업로드)이 통하지 않는다. 반드시 재로그인할 것.
+    login()
+    r = s.get(base + "/security.php", timeout=10)
+    r = s.post(base + "/security.php",
+               data={"security": "low", "seclev_submit": "Submit", "user_token": tok(r.text)},
+               timeout=10)
+    # ③ 진짜로 Low 가 됐는지 확인 (조용한 실패 방지)
+    m = re.search(r"Security level is currently: <em>(\w+)</em>", r.text)
+    level = m.group(1) if m else (s.cookies.get("security") or "?")
+    if level != "low":
+        print("     DVWA: Security 설정 실패 — 현재 등급 =", level)
+        sys.exit(1)
     print("     DVWA: DB 생성 + Security=Low 설정 완료 (admin/password)")
 except Exception as e:
     print("     DVWA 자동설정 실패(수동 1클릭 필요):", e)
@@ -259,15 +322,17 @@ fi
 # ---- 8. 안내 ----------------------------------------------------------------
 step "8/8  완료 — 접속 주소"
 cat <<EOF
-${B}================ 접속 주소 (희생자 IP = ${VICTIM_IP}) ================${N}
-  ${C}강좌 사이트${N} : http://${VICTIM_IP}:8090    ← 커리큘럼·교과서·다운로드
-  ${C}DVWA${N}        : http://${VICTIM_IP}:8088    (admin / password, Security=Low)
-  ${C}NeoBank${N}     : http://${VICTIM_IP}:3001    (alice@example.com / alice123)
-  ${C}MediForum${N}   : http://${VICTIM_IP}:3003    (사이트 내 회원가입)
-  ${C}CTFd${N}        : http://${VICTIM_IP}:8000    (${CTFD_ADMIN} / ${CTFD_PASSWORD})
-  ${C}AI 도우미${N}   : http://${VICTIM_IP}:8001
-$( [ "$PROFILE_ARG" = extras ] && printf '  %sgovportal%s   : http://%s:3002   %sjuiceshop%s: http://%s:3000\n' "$C" "$N" "$VICTIM_IP" "$C" "$N" "$VICTIM_IP" )
+${B}================ 접속 주소 (이 컴퓨터 IP = ${VICTIM_IP}) ================${N}
+$( [ "$MODE" != victim ] && printf '  %s[hub] 강좌 사이트%s : http://%s:8090    ← 교과서·실습·담벼락·회원가입\n' "$C" "$N" "$VICTIM_IP" )
+$( [ "$MODE" != victim ] && printf '  %s[hub] CTFd%s        : http://%s:8000    (%s / %s)\n' "$C" "$N" "$VICTIM_IP" "$CTFD_ADMIN" "$CTFD_PASSWORD" )
+$( [ "$MODE" != victim ] && printf '  %s[hub] AI 도우미%s   : http://%s:8001\n' "$C" "$N" "$VICTIM_IP" )
+$( [ "$MODE" != hub ] && printf '  %s[victim] DVWA%s        : http://%s:8088    (admin / password, Security=Low)\n' "$C" "$N" "$VICTIM_IP" )
+$( [ "$MODE" != hub ] && printf '  %s[victim] NeoBank%s     : http://%s:3001    (alice@example.com / alice123)\n' "$C" "$N" "$VICTIM_IP" )
+$( [ "$MODE" != hub ] && printf '  %s[victim] MediForum%s   : http://%s:3003    (사이트 내 회원가입)\n' "$C" "$N" "$VICTIM_IP" )
+$( [ "$MODE" != hub ] && printf '  %s[victim] AICompanion%s : http://%s:3005    (alice / alice123, mock 모드)\n' "$C" "$N" "$VICTIM_IP" )
+$( [ "$MODE" = extras ] && printf '  %sgovportal%s   : http://%s:3002   %sjuiceshop%s: http://%s:3000\n' "$C" "$N" "$VICTIM_IP" "$C" "$N" "$VICTIM_IP" )
 ${B}=====================================================================${N}
+$( [ "$MODE" != victim ] && printf '  ★ 수업 전 필수:  cd ctf && python3 verify_ctf.py --victim <표적IP> --ctfd http://127.0.0.1:8000 --token <TOKEN> --submit\n' )
 
   상태 확인 :  cd infra && $COMPOSE ps
   로그 보기 :  cd infra && $COMPOSE logs -f ctfd

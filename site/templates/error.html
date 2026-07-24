@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · AI 웹 해킹 특강{% endblock %}
+{% block content %}
+<div class="section" style="max-width:560px;margin:60px auto;text-align:center">
+  <h1 style="font-size:56px;margin:0">{{ code }}</h1>
+  <p style="font-size:17px">{{ msg }}</p>
+  {% if code == 403 and not me %}
+  <p class="muted">먼저 <a href="/login">로그인</a>해 보세요.</p>
+  {% endif %}
+  <p><a class="btn" href="/">홈으로</a></p>
+</div>
+{% endblock %}

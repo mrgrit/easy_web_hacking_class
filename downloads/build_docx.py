@@ -19,11 +19,18 @@ LABS = ROOT / "contents" / "training"
 OUT = ROOT / "downloads"
 
 WEEK_TITLES = {
-    "01": "AI와 AI 에이전트, 그리고 윤리",
-    "02": "리눅스·Claude Code 첫걸음 + 내 첫 웹사이트 + GitHub",
-    "03": "웹의 작동 원리 + 직접 해보는 웹 해킹 (DVWA)",
-    "04": "AI 에이전트와 함께하는 모의해킹 (NeoBank)",
-    "05": "mini-CTF (MediForum + CTFd)",
+    "01": "AI와 AI 에이전트, 그리고 윤리 (에이전트 지도 · 트렌드 · 이슈)",
+    "02": "리눅스 · DGX Spark 접속 · Hermes Agent + 오픈 모델 · 내 첫 웹사이트 · GitHub",
+    "03": "웹의 작동 원리 + 직접 해보는 웹 해킹 (DVWA) — 브라우저만으로",
+    "04": "AI 에이전트(Hermes)와 함께하는 모의해킹 (NeoBank) + 브라우저 교차 검증",
+    "05": "mini-CTF (MediForum + CTFd) — 브라우저만으로 깃발 사냥",
+}
+
+# 특별 세션 — AI 서비스 모의해킹 3주 (파일명 lab_aiNN.yaml → 실습워크북_AINN.docx)
+AI_TITLES = {
+    "01": "AI 서비스는 어디가 약할까? — 공격 표면 · OWASP LLM Top 10 · 정찰",
+    "02": "프롬프트 인젝션 3종 + 챗봇의 답이 흉기가 될 때",
+    "03": "도구를 쥔 챗봇 · 모델 절취 · 그리고 방어 설계",
 }
 
 
@@ -34,14 +41,22 @@ def blank_line(doc, label):
     p.add_run("________________________________________________")
 
 
-def build(week):
-    lab = yaml.safe_load((LABS / f"lab_week{week}.yaml").read_text(encoding="utf-8"))
+def build(num, kind="week"):
+    """kind='week' → lab_weekNN.yaml,  kind='ai' → lab_aiNN.yaml"""
+    src = LABS / (f"lab_week{num}.yaml" if kind == "week" else f"lab_ai{num}.yaml")
+    lab = yaml.safe_load(src.read_text(encoding="utf-8"))
     steps = lab.get("steps", [])
+    if kind == "week":
+        head, title = f"Week {num}", WEEK_TITLES.get(num, "")
+        outname = f"실습워크북_Week{num}.docx"
+    else:
+        head, title = f"특별 세션 {int(num)}", AI_TITLES.get(num, "")
+        outname = f"실습워크북_AI{num}.docx"
 
     doc = Document()
     # 제목
     h = doc.add_heading(f"AI 웹 해킹 특강 — 실습 워크북", level=0)
-    sub = doc.add_heading(f"Week {week} · {WEEK_TITLES.get(week,'')}", level=1)
+    sub = doc.add_heading(f"{head} · {title}", level=1)
 
     # 표지 정보
     doc.add_paragraph()
@@ -65,7 +80,9 @@ def build(week):
 
     # 실습 기록표
     doc.add_heading("3. 실습 기록표", level=2)
-    doc.add_paragraph("각 단계를 해보고 결과를 적으세요. (정확한 명령·정답은 교과서를 보고 직접 채웁니다)")
+    doc.add_paragraph(
+        "각 단계를 해보고 결과를 적으세요. 실습은 원칙적으로 브라우저(F12 개발자도구)만으로 "
+        "진행합니다. 정답·해설은 강사(관리자) 화면에만 나오니, 먼저 스스로 끝까지 해보세요.")
     tbl = doc.add_table(rows=len(steps) + 1, cols=5)
     tbl.style = "Table Grid"
     hdr = ["단계", "무엇을 했나", "결과", "화면에서 본 것 / 메모", "막힌 점"]
@@ -86,12 +103,22 @@ def build(week):
     # 우와 포인트 / 회고 / 윤리
     doc.add_heading("4. 오늘의 ‘우와!’ 포인트", level=2)
     blank_line(doc, "→")
-    doc.add_heading("5. 한 줄 회고", level=2)
+    doc.add_heading("5. AI 에이전트에게 시킨 것 / 내가 눈으로 검증한 것", level=2)
+    v = doc.add_table(rows=4, cols=2)
+    v.style = "Table Grid"
+    v.rows[0].cells[0].text = "에이전트에게 시킨 지시(프롬프트)"
+    v.rows[0].cells[1].text = "내가 브라우저로 확인한 결과 (일치 ☐ / 다름 ☐)"
+    for i in range(1, 4):
+        v.rows[i].cells[0].text = ""
+        v.rows[i].cells[1].text = ""
+    doc.add_paragraph("※ 에이전트가 ‘찾았습니다’라고 해도, 브라우저로 확인되지 않으면 그것은 환각입니다.")
+    doc.add_heading("6. 한 줄 회고", level=2)
     blank_line(doc, "→")
-    doc.add_heading("6. 윤리 체크", level=2)
+    doc.add_heading("7. 윤리 체크", level=2)
     doc.add_paragraph("☐ 나는 허락된 표적(실습 환경)에서만 공격/점검을 했다.")
+    doc.add_paragraph("☐ 나는 AI 에이전트에게도 허락된 표적만 지시했다.")
 
-    out = OUT / f"실습워크북_Week{week}.docx"
+    out = OUT / outname
     doc.save(str(out))
     print(f"  생성: {out.name}  (단계 {len(steps)}개)")
 
@@ -107,14 +134,17 @@ def build_pledge():
     doc.add_heading("나의 서약", level=2)
     pledges = [
         ("① 허락된 곳에서만 한다.",
-         "나는 이 특강이 연습용으로 만든 표적(DVWA·NeoBank·MediForum·CTFd)에서만 배운 기술을 쓴다."),
+         "나는 이 특강이 연습용으로 만든 표적(DVWA·NeoBank·MediForum·AICompanion·CTFd)에서만 배운 기술을 쓴다."),
         ("② 남의 시스템은 건드리지 않는다.",
          "나는 허락받지 않은 다른 사람·학교·회사의 시스템에 절대 무단으로 접근하지 않는다."),
         ("③ 알게 된 약점은 악용하지 않고 책임 있게 알린다.",
          "나는 우연히 약점을 발견해도 나쁜 데 쓰지 않고, 고칠 수 있도록 제대로 알린다."),
         ("④ 배운 기술을 좋은 방향으로 쓴다.",
          "나는 이 기술을 누군가를 지키고 더 안전한 세상을 만드는 데 쓴다(화이트해커처럼)."),
-        ("⑤ 위반 시 책임은 나에게 있음을 안다.",
+        ("⑤ AI 에이전트에게 대신 시키지 않는다.",
+         "나는 Hermes Agent 같은 AI 에이전트에게도 허락된 표적만 지시한다. "
+         "도구가 대신 실행해도 책임은 지시한 나에게 있다는 것을 안다."),
+        ("⑥ 위반 시 책임은 나에게 있음을 안다.",
          "나는 이 약속을 어겼을 때의 법적·윤리적 책임이 나 자신에게 있다는 것을 분명히 안다."),
     ]
     for head, body in pledges:
@@ -138,5 +168,7 @@ if __name__ == "__main__":
     print("배부 자료(.docx) 생성 중...")
     build_pledge()
     for wk in WEEK_TITLES:
-        build(wk)
+        build(wk, "week")
+    for n in AI_TITLES:
+        build(n, "ai")
     print("완료.")

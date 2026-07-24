@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2 style="margin-top:0;">진료기록 보관함</h2>
+  <p class="meta">
+    아래는 우리 병원에 보관 중인 진료기록 <b>목록</b>입니다. 자세한 내용(진단·처방)은
+    <b>본인 기록만</b> 열람할 수 있습니다. 기록 번호를 눌러 상세로 이동하세요.
+  </p>
+</div>
+
+<div class="card">
+  <table>
+    <tr><th>기록 번호</th><th>진료일</th><th>환자</th><th>담당의</th><th></th></tr>
+    {% for r in records %}
+    <tr>
+      <td><b>#{{r.id}}</b></td>
+      <td>{{r.visit_date}}</td>
+      <td>{{r.patient_name or '—'}}</td>
+      <td>{{r.doctor_name or '—'}}</td>
+      <td><a class="btn btn-sec" href="/records/{{r.id}}">상세 보기</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

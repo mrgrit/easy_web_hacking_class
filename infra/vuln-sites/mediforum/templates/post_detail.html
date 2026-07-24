@@ -1,11 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
+{% if reported %}
+<div class="card" style="border-color:var(--acc);">
+  ✅ 신고가 접수되었습니다. <b>관리자 봇</b>이 검토 대기열에 넣고 곧 글을 열어 확인합니다.
+</div>
+{% endif %}
 <div class="card">
   <div><span class="tag">{{p.tag}}</span></div>
   <h2 style="margin-top:6px;">{{p.title}}</h2>
   <div class="meta">by <a href="/profile/{{p.author_id}}">{{p.display_name}}</a> · {{p.created_at}}</div>
   <hr style="border-color:var(--border);margin:14px 0;">
   <div class="post-body">{{p.body|safe}}</div>
+  <hr style="border-color:var(--border);margin:14px 0;">
+  <form method="POST" action="/posts/{{p.id}}/report" style="display:flex;gap:8px;align-items:center;">
+    <input name="reason" placeholder="신고 사유 (예: 부적절한 내용)" style="margin:0;">
+    <button class="btn btn-red" type="submit" style="white-space:nowrap;">🚨 신고하기</button>
+  </form>
+  <p class="meta" style="margin-bottom:0;">신고된 글은 관리자가 직접 열어 검토합니다.</p>
 </div>
 
 <div class="card">
